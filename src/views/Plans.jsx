@@ -162,11 +162,12 @@ function PlanEditor({ p, types, onSave, onClose }) {
           <div>
             <p className="phase">Cours compris</p>
             <div className="row">
+              <label className="inline chip"><input type="checkbox" checked={!(f.course_types || []).length} onChange={() => set('course_types', (f.course_types || []).length ? [] : [types[0].name])} />Tous les cours</label>
               {types.map((t) => { const on = (f.course_types || []).includes(t.name); return (
                 <label className="inline chip" key={t.id || t.name}><input type="checkbox" checked={on} onChange={() => set('course_types', on ? f.course_types.filter((x) => x !== t.name) : [...(f.course_types || []), t.name])} />{t.name}</label>
               ) })}
             </div>
-            <p className="sub">Aucune case cochée = tous les cours.</p>
+            <p className="sub">{(f.course_types || []).length ? 'Seulement : ' + f.course_types.join(', ') : 'La formule donne accès à tous les cours, y compris ceux ajoutés plus tard.'}</p>
           </div>
         )}
         <label className="inline"><input type="checkbox" checked={!!f.for_sale} onChange={(e) => set('for_sale', e.target.checked)} /> Visible dans la boutique des adhérents</label>
