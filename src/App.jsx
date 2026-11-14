@@ -13,6 +13,7 @@ import Resources from './views/Resources'
 import Athlete from './views/Athlete'
 import Members from './views/Members'
 import Plans from './views/Plans'
+import AdminConsole from './views/AdminConsole'
 
 const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['plans', 'Formules'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
 const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations'], ['shop', 'Boutique']]
@@ -94,7 +95,7 @@ export default function App() {
     let sp = localStorage.getItem('socle-space') || ''
     if (!sp) { sp = list.some((b) => b.myRole !== 'adherent') || (adm && adm.length) ? 'salle' : 'athlete'; setSpace(sp) }
     const inSpace = list.filter((b) => (sp === 'athlete' ? b.myRole === 'adherent' : b.myRole !== 'adherent'))
-    if (inSpace.length === 1 && !inSpace.some((b) => b.id === boxId)) setBoxId(inSpace[0].id)
+    if (inSpace.length === 1 && !inSpace.some((b) => b.id === boxId) && !(sp === 'salle' && adm && adm.length)) setBoxId(inSpace[0].id)
   }, [session]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { loadBoxes() }, [loadBoxes])
@@ -123,6 +124,34 @@ export default function App() {
           <button className="linkbtn" onClick={() => setJoinClash(null)}>Rester dans mon espace {joinClash.role === 'owner' ? 'owner' : 'coach'}</button>
         </div>
       </div>
+    )
+  }
+  const effDark0 = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
+  if (!box && space === 'salle' && isAdmin) {
+    return (
+      <>
+        <header className="topbar">
+          <div className="tb">
+            <div className="brand"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
+            <nav className="tabs" aria-label="Navigation"><button className="on" aria-current="page">Console admin</button></nav>
+            <div className="tb-right">
+              <button className="iconbtn" title={effDark0 ? 'Version claire' : 'Version sombre'} onClick={() => { const t = effDark0 ? 'light' : 'dark'; setTheme(t); localStorage.setItem('socle-theme', t) }}>{effDark0 ? '☀' : '☾'}</button>
+              <div className="menu">
+                <button className="menubtn" onClick={() => setMenu(!menu)} aria-expanded={menu}><span className="pill neutral">Admin</span> ▾</button>
+                {menu && (
+                  <div className="menupanel" onMouseLeave={() => setMenu(false)}>
+                    <div className="sub" style={{ padding: '4px 8px' }}>{session.user.email}</div>
+                  {hasOther && <button onClick={switchSpace}>Passer à mon espace athlète</button>}
+                    <button onClick={() => { localStorage.removeItem('socle-box'); supabase.auth.signOut() }}>Se déconnecter</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+        <AdminConsole toast={toast} onOpen={async (id) => { await loadBoxes(); setBoxId(id); localStorage.setItem('socle-box', id); setTab('today') }} />
+        {toastNode}
+      </>
     )
   }
   if (!box) {
@@ -156,6 +185,7 @@ export default function App() {
                   <div className="sub" style={{ padding: '4px 8px' }}>{session.user.email}</div>
                   {spaceBoxes.length > 1 && spaceBoxes.map((b) => <button key={b.id} onClick={() => { setBoxId(b.id); localStorage.setItem('socle-box', b.id); setMenu(false) }}>{b.id === box.id ? '✓ ' : ''}{b.name}</button>)}
                   <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>{space === 'athlete' ? 'Rejoindre ou changer de salle' : 'Changer de salle'}</button>
+                  {isAdmin && space === 'salle' && <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>← Console admin</button>}
                   {hasOther && <button onClick={switchSpace}>{otherSpace === 'athlete' ? 'Passer à mon espace athlète' : 'Passer à l’espace salle'}</button>}
                   <button onClick={() => { localStorage.removeItem('socle-box'); supabase.auth.signOut() }}>Se déconnecter</button>
                 </div>

@@ -316,3 +316,4 @@ p.sub{margin:0}
 .spacebtn:focus-visible{outline:2px solid var(--accent)}
 .spaceseg{align-self:flex-start}
 .spaceseg button{padding:6px 14px;font-size:13px}
+.warntxt{color:var(--warn);font-weight:600}
