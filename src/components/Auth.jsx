@@ -28,7 +28,7 @@ export default function Auth({ recovery, onRecovered }) {
         if (error) throw error
       } else if (mode === 'signup') {
         if (pass.length < 8) throw new Error('Le mot de passe doit faire au moins 8 caractères.')
-        const { data, error } = await supabase.auth.signUp({ email, password: pass, options: { data: { full_name: name }, emailRedirectTo: window.location.origin } })
+        const { data, error } = await supabase.auth.signUp({ email, password: pass, options: { data: { full_name: name, join_code: localStorage.getItem('socle-join') || null }, emailRedirectTo: window.location.origin + (localStorage.getItem('socle-join') ? '/?rejoindre=' + localStorage.getItem('socle-join') : '') } })
         if (error) throw error
         if (!data.session) setInfo('Compte créé. Clique sur le lien reçu par e-mail pour confirmer ton adresse, puis reviens ici.')
       } else if (mode === 'magic') {
