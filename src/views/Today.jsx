@@ -120,7 +120,7 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
               <button key={d} className={'weekday' + (d === D ? ' on' : '')} onClick={() => setD(d)}>
                 <span className="wd">{d === t ? "Auj." : JOURS[wdOf(d)].slice(0, 3)} {parse(d).getDate()}</span>
                 {rs.map((r) => { const f = r.booked / r.capacity; return (
-                  <span key={r.course_id} className="wslot"><b className="num">{hhmm(r.start_time)}</b><span className={'wfill ' + (f >= 0.9 ? 'warn' : f >= 0.6 ? 'good' : r.booked ? 'low' : 'none')}>{r.booked}/{r.capacity}{r.waiting ? ' +' + r.waiting : ''}</span></span>
+                  <span key={r.course_id} className="wslot" title={r.type_name + (r.label ? ' · ' + r.label : '')}><b className="num">{hhmm(r.start_time)}{rs.filter((x) => x.start_time === r.start_time).length > 1 && <small className="wtype"> {r.type_name}</small>}</b><span className={'wfill ' + (f >= 0.9 ? 'warn' : f >= 0.6 ? 'good' : r.booked ? 'low' : 'none')}>{r.booked}/{r.capacity}{r.waiting ? ' +' + r.waiting : ''}</span></span>
                 ) })}
                 {!rs.length && <span className="sub">—</span>}
               </button>

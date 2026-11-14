@@ -65,7 +65,7 @@ export default function Roll({ course, day, rows, members, types, canRoll, onCha
   return (
     <details className="roll" open={booked.length > 0 && canRoll}>
       <summary>
-        <TypeTag name={course.type_name} types={types} /><b className="num">{hhmm(course.start_time)}</b>
+        <TypeTag name={course.type_name} types={types} /><b className="num">{hhmm(course.start_time)}</b>{course.label && <span className="sub">{course.label}</span>}
         <span className="sub">{booked.length}/{course.capacity} inscrits{waiting.length ? ' · ' + waiting.length + ' en attente' : ''}</span>
         <span className="right"><Pill cls={fill >= 0.9 ? 'warn' : fill >= 0.6 ? 'good' : 'bad'}>{Math.round(fill * 100)} %</Pill>{present > 0 && <> <Pill cls="good">{present} présent{present > 1 ? 's' : ''}</Pill></>}</span>
       </summary>

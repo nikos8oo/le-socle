@@ -329,3 +329,12 @@ p.sub{margin:0}
 .faq summary{cursor:pointer;font-weight:600}
 .faq p{margin:8px 0 0;color:var(--muted);font-size:14px}
 .subchip.trialchip{background:var(--accent-soft);color:var(--accent)}
+.pslot{display:flex;flex-direction:column;gap:4px;height:100%}
+.pslot.multi .pchip{min-height:40px}
+.pslot.multi .pchip b{font-size:14px}
+.pslot.multi .hcell{min-height:44px}
+.pslot.multi .hcell b{font-size:17px}
+.pchip.empty.mini{min-height:22px;font-size:14px;opacity:.7}
+.courserow{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}
+.wtype{font-family:var(--body);font-weight:500;font-size:11px;color:var(--muted)}
+input[type=time]{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink)}

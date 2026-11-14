@@ -87,15 +87,25 @@ export default function Planning({ box, role, data, reload, toast, log }) {
                 <tr key={h}>
                   <th className="hour"><span>{h}</span></th>
                   {days.map((d) => {
-                    const c = data.courses.find((x) => x.weekday === d && hhmm(x.start_time) === h)
+                    const cs = data.courses.filter((x) => x.weekday === d && hhmm(x.start_time) === h).sort((a, b) => a.type_name.localeCompare(b.type_name))
                     if (mode === 'grille') {
-                      if (c) return <td key={d}><button className="pchip" style={chip(c.type_name, types)} disabled={role !== 'owner'} onClick={() => setEdit(c)}><b>{c.type_name}</b><small>{c.capacity} pl.{c.test_since ? ' · test' : ''}</small></button></td>
-                      return <td key={d}>{role === 'owner' && <button className="pchip empty" onClick={() => setEdit({ weekday: d, start_time: h, type_name: types[0].name, capacity: 15 })} aria-label={'Ajouter un cours ' + JOURS[d] + ' ' + h}>+</button>}</td>
+                      return (
+                        <td key={d}>
+                          <div className={'pslot' + (cs.length > 1 ? ' multi' : '')}>
+                            {cs.map((c) => <button key={c.id} className="pchip" style={chip(c.type_name, types)} disabled={role !== 'owner'} onClick={() => setEdit(c)}><b>{c.type_name}</b><small>{c.label ? c.label + ' · ' : ''}{c.capacity} pl.{c.test_since ? ' · test' : ''}</small></button>)}
+                            {role === 'owner' && cs.length < 3 && <button className={'pchip empty' + (cs.length ? ' mini' : '')} onClick={() => setEdit({ weekday: d, start_time: h, type_name: types[0].name, capacity: 15, siblings: cs.length })} aria-label={(cs.length ? 'Ajouter un cours en même temps ' : 'Ajouter un cours ') + JOURS[d] + ' ' + h} title={cs.length ? 'Ajouter un cours en même temps' : 'Ajouter un cours'}>+</button>}
+                          </div>
+                        </td>
+                      )
                     }
-                    if (!c) return <td key={d} />
-                    const r = stats.per[c.id]
-                    if (!r || !r.n) return <td key={d}><div className="hcell nodata"><span className="tag" style={chip(c.type_name, types)}>{c.type_name}</span><b>—</b><small>pas de saisie</small></div></td>
-                    return <td key={d}><div className={'hcell ' + heat(r.rate)} title={status(c, r).reco}><span className="tag" style={chip(c.type_name, types)}>{c.type_name}{c.test_since ? ' · test' : ''}</span><b>{num(r.rate * 100)} %</b><small>{num(r.avg, 1)} / {c.capacity} · {r.n} séances</small></div></td>
+                    if (!cs.length) return <td key={d} />
+                    return (
+                      <td key={d}><div className={'pslot' + (cs.length > 1 ? ' multi' : '')}>{cs.map((c) => {
+                        const r = stats.per[c.id]
+                        if (!r || !r.n) return <div key={c.id} className="hcell nodata"><span className="tag" style={chip(c.type_name, types)}>{c.type_name}</span><b>—</b><small>{c.label ? c.label + ' · ' : ''}pas de saisie</small></div>
+                        return <div key={c.id} className={'hcell ' + heat(r.rate)} title={status(c, r).reco}><span className="tag" style={chip(c.type_name, types)}>{c.type_name}{c.test_since ? ' · test' : ''}</span><b>{num(r.rate * 100)} %</b><small>{num(r.avg, 1)} / {c.capacity} · {r.n} séances</small></div>
+                      })}</div></td>
+                    )
                   })}
                 </tr>
               ))}
@@ -116,7 +126,7 @@ export default function Planning({ box, role, data, reload, toast, log }) {
           <h3>Créneau par créneau</h3>
           <div className="scroll"><table>
             <thead><tr><th>Créneau</th><th>Cours</th><th>Moyenne</th><th>Taux</th><th>Statut</th><th>Conseil</th></tr></thead>
-            <tbody>{data.courses.map((c) => { const r = stats.per[c.id], s = status(c, r); return <tr key={c.id}><td>{JOURS[c.weekday]} {hhmm(c.start_time)}</td><td><TypeTag name={c.type_name} types={types} /></td><td>{r.n ? num(r.avg, 1) + ' / ' + c.capacity : '—'}</td><td>{r.n ? num(r.rate * 100) + ' %' : '—'}</td><td><Pill cls={s.cls}>{s.txt}</Pill></td><td className="sub">{s.reco}</td></tr> })}</tbody>
+            <tbody>{data.courses.map((c) => { const r = stats.per[c.id], s = status(c, r); return <tr key={c.id}><td>{JOURS[c.weekday]} {hhmm(c.start_time)}{c.label ? ' · ' + c.label : ''}</td><td><TypeTag name={c.type_name} types={types} /></td><td>{r.n ? num(r.avg, 1) + ' / ' + c.capacity : '—'}</td><td>{r.n ? num(r.rate * 100) + ' %' : '—'}</td><td><Pill cls={s.cls}>{s.txt}</Pill></td><td className="sub">{s.reco}</td></tr> })}</tbody>
           </table></div>
         </div>
       )}
@@ -127,38 +137,64 @@ export default function Planning({ box, role, data, reload, toast, log }) {
 }
 
 function CourseModal({ course, types, box, data, onClose, onSaved, toast }) {
-  const [f, setF] = useState({ weekday: course.weekday, start_time: hhmm(course.start_time), type_name: course.type_name, capacity: course.capacity, test: !!course.test_since, newType: '' })
+  const isNew = !course.id
+  const room = 3 - (course.siblings || 0)
+  const [f, setF] = useState({ weekday: course.weekday, start_time: hhmm(course.start_time), test: !!course.test_since })
+  const blank = (i) => ({ type_name: i === 0 ? course.type_name : (types[i] || types[0]).name, capacity: course.capacity || 15, label: course.label || '', newType: '' })
+  const [rows, setRows] = useState([blank(0)])
+  const setRow = (i, patch) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+  function setCount(n) {
+    const next = rows.slice(0, n)
+    while (next.length < n) next.push({ ...blank(next.length), label: 'Zone ' + (next.length + 1) })
+    if (n > 1 && !next[0].label) next[0] = { ...next[0], label: 'Zone 1' }
+    setRows(next)
+  }
+
   async function save(e) {
     e.preventDefault()
-    let type = f.type_name
-    if (type === '__new') {
-      type = f.newType.trim()
-      if (!type) return
+    const out = []
+    for (const r of rows) {
+      let type = r.type_name
+      if (type === '__new') { type = r.newType.trim(); if (!type) return toast('Donne un nom au nouveau type de cours') }
+      if (!data.course_types.some((t) => t.name === type) && !out.some((o) => o.type_name === type)) {
+        const { error } = await supabase.from('course_types').insert({ box_id: box.id, name: type, color_index: (data.course_types.length + out.length) % PALETTE.length })
+        if (error && !/duplicate/i.test(error.message)) return toast(error.message)
+      }
+      out.push({ box_id: box.id, weekday: Number(f.weekday), start_time: f.start_time, type_name: type, capacity: Math.max(1, Number(r.capacity) || 1), label: r.label.trim() || null, test_since: f.test ? course.test_since || today() : null })
     }
-    if (!data.course_types.some((t) => t.name === type)) {
-      const { error } = await supabase.from('course_types').insert({ box_id: box.id, name: type, color_index: data.course_types.length % PALETTE.length })
-      if (error && !/duplicate/i.test(error.message)) return toast(error.message)
-    }
-    const row = { box_id: box.id, weekday: Number(f.weekday), start_time: f.start_time, type_name: type, capacity: Math.max(1, Number(f.capacity) || 1), test_since: f.test ? course.test_since || today() : null }
-    const { error } = course.id ? await supabase.from('courses').update(row).eq('id', course.id) : await supabase.from('courses').insert(row)
-    if (error) return toast(/duplicate|unique/i.test(error.message) ? 'Il y a déjà un cours à cette heure-là' : error.message)
+    const { error } = isNew ? await supabase.from('courses').insert(out) : await supabase.from('courses').update(out[0]).eq('id', course.id)
+    if (error) return toast(/maximum 3/i.test(error.message) ? 'Maximum 3 cours sur le même créneau' : error.message)
     onSaved()
   }
   async function del() {
+    if (!window.confirm('Supprimer ce cours ? Les réservations et la fréquentation de ce cours seront supprimées.')) return
     const { error } = await supabase.from('courses').delete().eq('id', course.id)
     if (error) return toast(error.message)
     onSaved()
   }
   return (
-    <Modal title={course.id ? 'Modifier le cours' : 'Ajouter un cours'} onClose={onClose}>
-      <form className="form" onSubmit={save}>
-        <label>Jour<select value={f.weekday} onChange={(e) => setF({ ...f, weekday: e.target.value })}>{JOURS.map((d, i) => <option key={i} value={i}>{d}</option>)}</select></label>
-        <label>Heure<input type="time" value={f.start_time} onChange={(e) => setF({ ...f, start_time: e.target.value })} required /></label>
-        <label>Type de cours<select value={f.type_name} onChange={(e) => setF({ ...f, type_name: e.target.value })}>{types.map((t) => <option key={t.name}>{t.name}</option>)}<option value="__new">Nouveau type…</option></select></label>
-        <label>Places<input type="number" min="1" value={f.capacity} onChange={(e) => setF({ ...f, capacity: e.target.value })} required /></label>
-        {f.type_name === '__new' && <label>Nom du nouveau type<input value={f.newType} onChange={(e) => setF({ ...f, newType: e.target.value })} placeholder="Ex. : Mobilité" /></label>}
-        <label className="inline full"><input type="checkbox" checked={f.test} onChange={(e) => setF({ ...f, test: e.target.checked })} /> Créneau test (3 mois, seuil de 5 adhérents)</label>
-        <div className="row full spread">{course.id ? <button type="button" className="btn ghost" onClick={del}>Supprimer ce cours</button> : <span />}<button className="btn">Enregistrer</button></div>
+    <Modal title={isNew ? (course.siblings ? 'Ajouter un cours en même temps' : 'Ajouter un cours') : 'Modifier le cours'} onClose={onClose} wide={rows.length > 1}>
+      <form className="stack" onSubmit={save}>
+        <div className="form">
+          <label>Jour<select value={f.weekday} onChange={(e) => setF({ ...f, weekday: e.target.value })}>{JOURS.map((d, i) => <option key={i} value={i}>{d}</option>)}</select></label>
+          <label>Heure<input type="time" value={f.start_time} onChange={(e) => setF({ ...f, start_time: e.target.value })} required /></label>
+          {isNew && room > 1 && <label className="full">{course.siblings ? 'Il y a déjà ' + course.siblings + ' cours à cette heure : combien en ajouter ?' : 'Cours en même temps'}
+            <div className="seg">{[1, 2, 3].filter((n) => n <= room).map((n) => <button type="button" key={n} className="rper" aria-pressed={rows.length === n} onClick={() => setCount(n)}>{course.siblings ? 'Ajouter ' + n + ' cours' : n === 1 ? '1 cours' : n + ' cours en parallèle'}</button>)}</div>
+          </label>}
+        </div>
+        {rows.map((r, i) => (
+          <div key={i} className={rows.length > 1 ? 'courserow' : ''}>
+            {rows.length > 1 && <p className="phase" style={{ marginTop: 0 }}>Cours {i + 1}</p>}
+            <div className="form">
+              <label>Type de cours<select value={r.type_name} onChange={(e) => setRow(i, { type_name: e.target.value })}>{types.map((t) => <option key={t.name}>{t.name}</option>)}<option value="__new">Nouveau type…</option></select></label>
+              {r.type_name === '__new' && <label>Nom du nouveau type<input value={r.newType} onChange={(e) => setRow(i, { newType: e.target.value })} placeholder="Ex. : Spé gym" /></label>}
+              <label>Places<input type="number" min="1" value={r.capacity} onChange={(e) => setRow(i, { capacity: e.target.value })} required /></label>
+              <label>Zone ou salle{rows.length > 1 || course.siblings ? '' : ' (facultatif)'}<input value={r.label} onChange={(e) => setRow(i, { label: e.target.value })} placeholder="Ex. : Salle 1, Zone haltéro" /></label>
+            </div>
+          </div>
+        ))}
+        <label className="inline"><input type="checkbox" checked={f.test} onChange={(e) => setF({ ...f, test: e.target.checked })} /> Créneau test (3 mois, seuil de 5 adhérents)</label>
+        <div className="row spread">{!isNew ? <button type="button" className="btn ghost" onClick={del}>Supprimer ce cours</button> : <span />}<button className="btn">{rows.length > 1 ? 'Créer les ' + rows.length + ' cours' : 'Enregistrer'}</button></div>
       </form>
     </Modal>
   )
