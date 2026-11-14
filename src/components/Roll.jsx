@@ -20,6 +20,24 @@ export function useDayBookings(boxId, day) {
   return [rows, load]
 }
 
+// Les réservations des 7 prochains jours, en direct
+export function useWeekSchedule(boxId, from) {
+  const [rows, setRows] = useState([])
+  const load = useCallback(async () => {
+    const to = new Date(from); to.setDate(to.getDate() + 6)
+    const { data } = await supabase.rpc('box_schedule', { p_box: boxId, p_from: from, p_to: to.toISOString().slice(0, 10) })
+    setRows(data || [])
+  }, [boxId, from])
+  useEffect(() => {
+    load()
+    const ch = supabase.channel('wk-' + boxId)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: 'box_id=eq.' + boxId }, load)
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [boxId, load])
+  return rows
+}
+
 export default function Roll({ course, day, rows, members, types, canRoll, onChange, toast }) {
   const [walk, setWalk] = useState('')
   const name = (id) => (members.find((m) => m.id === id) || {}).name || 'Adhérent'

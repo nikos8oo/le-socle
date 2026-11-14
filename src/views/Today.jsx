@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { JOURS, MOIS, addDays, diffDays, fmt, hhmm, parse, today, wdOf } from '../lib/dates'
 import { ONB_STEPS, whoName } from '../lib/method'
 import { Empty, Pill, TypeTag, statusOf } from '../components/ui'
-import Roll, { useDayBookings } from '../components/Roll'
+import Roll, { useDayBookings, useWeekSchedule } from '../components/Roll'
 
 export default function Today({ box, role, data, reload, log, toast, myCoach, me, goTo }) {
   const t = today()
@@ -34,6 +34,9 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
   const [pres, setPres] = useState({})
   const [bk, reloadBk] = useDayBookings(box.id, D)
   const hasBk = bk.length > 0
+  const week = useWeekSchedule(box.id, t)
+  // un nouvel adhérent vient de réserver : on recharge la liste pour afficher son nom
+  useEffect(() => { if (bk.some((r) => !data.members.some((m) => m.id === r.member_id))) reload() }, [bk]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setPres({}), [D])
   const trialsDay = data.trials.filter((e) => e.day === D)
   const evs = data.events.filter((e) => e.day >= D && e.day <= addDays(D, 45))
@@ -108,6 +111,23 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
         </div>
       </div>
       {role === 'coach' && !me && <p className="notice">Ton compte n'est pas encore relié à une fiche coach. Demande à l'owner de t'inviter depuis sa fiche.</p>}
+
+      {week.length > 0 && (
+        <div className="card">
+          <div className="spread"><h2>Réservations des 7 prochains jours</h2><span className="sub">{week.reduce((a, r) => a + r.booked, 0)} places réservées · mis à jour en direct</span></div>
+          <div className="weekgrid">
+            {Array.from({ length: 7 }, (_, i) => addDays(t, i)).map((d) => { const rs = week.filter((r) => r.day === d); return (
+              <button key={d} className={'weekday' + (d === D ? ' on' : '')} onClick={() => setD(d)}>
+                <span className="wd">{d === t ? "Auj." : JOURS[wdOf(d)].slice(0, 3)} {parse(d).getDate()}</span>
+                {rs.map((r) => { const f = r.booked / r.capacity; return (
+                  <span key={r.course_id} className="wslot"><b className="num">{hhmm(r.start_time)}</b><span className={'wfill ' + (f >= 0.9 ? 'warn' : f >= 0.6 ? 'good' : r.booked ? 'low' : 'none')}>{r.booked}/{r.capacity}{r.waiting ? ' +' + r.waiting : ''}</span></span>
+                ) })}
+                {!rs.length && <span className="sub">—</span>}
+              </button>
+            ) })}
+          </div>
+        </div>
+      )}
 
       <div className="grid g2 top">
         <div className="card">
