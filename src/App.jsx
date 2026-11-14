@@ -14,8 +14,9 @@ import Athlete from './views/Athlete'
 import Members from './views/Members'
 import Plans from './views/Plans'
 import AdminConsole from './views/AdminConsole'
+import Payments from './views/Payments'
 
-const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['plans', 'Formules'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
+const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['plans', 'Formules'], ['payments', 'Paiements'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
 const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations'], ['shop', 'Boutique']]
 const COACH_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['trials', 'Mes essais'], ['events', 'Événements'], ['resources', 'Ressources']]
 
@@ -41,7 +42,7 @@ export default function App() {
     if (inv) { localStorage.setItem('socle-invite', inv); localStorage.setItem('socle-space', 'salle'); setSpaceRaw('salle') }
     if (join) { localStorage.setItem('socle-join', join); localStorage.setItem('socle-space', 'athlete'); setSpaceRaw('athlete') }
     const st = p.get('stripe'), pay = p.get('paiement')
-    if (st) { setTab('plans'); setTimeout(() => toast(st === 'retour' ? 'Retour de Stripe : vérification de ton compte…' : 'Lien expiré : clique à nouveau sur « Activer le paiement en ligne »'), 600) }
+    if (st) { setTab('payments'); setTimeout(() => toast(st === 'retour' ? 'Retour de Stripe : vérification de ton compte…' : 'Lien expiré : clique à nouveau sur « Activer le paiement en ligne »'), 600) }
     if (pay) { setTab(pay === 'ok' ? 'mine' : 'shop'); setTimeout(() => toast(pay === 'ok' ? 'Paiement réussi ! Ta formule s’active dans quelques secondes.' : 'Paiement annulé : rien n’a été débité.'), 600) }
     if (inv || join || st || pay) window.history.replaceState(null, '', window.location.pathname)
   }, [])
@@ -210,7 +211,8 @@ export default function App() {
             {current === 'today' && <Today {...ctx} goTo={setTab} />}
             {current === 'planning' && <Planning {...ctx} />}
             {current === 'members' && <Members {...ctx} onBoxChange={loadBoxes} />}
-            {current === 'plans' && <Plans {...ctx} />}
+            {current === 'plans' && <Plans {...ctx} goTo={setTab} />}
+            {current === 'payments' && <Payments {...ctx} />}
             {current === 'trials' && <Trials {...ctx} />}
             {current === 'events' && <Events {...ctx} />}
             {current === 'team' && <Team {...ctx} />}

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { fmt } from '../lib/dates'
 import { money } from '../lib/plans'
 import { Empty, Modal, Pill } from '../components/ui'
+import { stripeApi } from '../lib/stripe'
 
 const STATUS = { pilote: ['warn', 'Pilote'], active: ['good', 'Active'], suspendue: ['bad', 'Suspendue'], archivee: ['neutral', 'Archivée'] }
 const ago = (ts) => {
@@ -53,7 +54,7 @@ export default function AdminConsole({ toast, onOpen }) {
           </div>
         </div>
         <div className="scroll"><table>
-          <thead><tr><th>Salle</th><th>Statut</th><th>Owner</th><th>Adhérents</th><th>Abonnés</th><th>Revenu / mois</th><th>Réserv. 30 j</th><th>Activité</th><th></th></tr></thead>
+          <thead><tr><th>Salle</th><th>Statut</th><th>Owner</th><th>Adhérents</th><th>Abonnés</th><th>Revenu / mois</th><th>Paiement CB</th><th>Réserv. 30 j</th><th>Activité</th><th></th></tr></thead>
           <tbody>
             {list.map((r) => (
               <tr key={r.id}>
@@ -63,6 +64,7 @@ export default function AdminConsole({ toast, onOpen }) {
                 <td>{r.adherents}</td>
                 <td>{r.active_subs}</td>
                 <td>{money(r.mrr_cents)}</td>
+                <td>{r.stripe_charges_enabled ? <Pill cls="good">Actif</Pill> : r.stripe_account_id ? <Pill cls="warn">En cours</Pill> : <Pill>Non</Pill>}</td>
                 <td>{r.bookings_30}{r.bookings_30 ? <span className="sub"> · {Math.round(r.presents_30 / r.bookings_30 * 100)} % venus</span> : null}</td>
                 <td className={r.last_activity && Date.now() - new Date(r.last_activity).getTime() <= 7 * 864e5 ? '' : 'warntxt'}>{ago(r.last_activity)}</td>
                 <td><div className="row"><button className="btn small" onClick={() => onOpen(r.id)}>Ouvrir</button><button className="btn small ghost" onClick={() => setSel(r)}>Gérer</button></div></td>
@@ -166,6 +168,12 @@ function ManageBox({ box, toast, onClose, onChange, onOpen }) {
     if (error) return toast(error.message)
     load(); onChange()
   }
+  async function disconnectStripe() {
+    if (!window.confirm('Détacher le compte Stripe de ' + box.name + ' ? L’owner devra reconnecter sa salle depuis l’onglet Paiements. Les abonnements déjà payés sur l’ancien compte ne seront plus suivis.')) return
+    try { await stripeApi('disconnect', { box_id: box.id, close: true }) } catch (e) { return toast(e.message) }
+    toast('Compte Stripe détaché')
+    onChange()
+  }
   const linked = (cid) => people.some((p) => p.coach_name && coaches.find((c) => c.id === cid && c.name === p.coach_name))
 
   return (
@@ -178,6 +186,11 @@ function ManageBox({ box, toast, onClose, onChange, onOpen }) {
           <label className="full">Notes privées (visibles par toi seul)<textarea value={f.admin_notes} onChange={(e) => setF({ ...f, admin_notes: e.target.value })} placeholder="Ex. : contrat signé le…, prochaine visio le…, point d'attention…" /></label>
           <div className="row full end"><button className="btn ghost" type="button" onClick={() => onOpen(box.id)}>Ouvrir la salle</button><button className="btn">Enregistrer</button></div>
         </form>
+
+        <div className="prow">
+          <div style={{ flex: 1 }}><b>Paiement en ligne</b><div className="sub">{box.stripe_account_id ? (box.stripe_charges_enabled ? 'Actif · ' : 'Inscription Stripe en cours · ') + box.stripe_account_id : 'Pas encore connecté : l’owner le fait depuis son onglet Paiements'}</div></div>
+          {box.stripe_account_id && <button className="btn small ghost" onClick={disconnectStripe}>Détacher le compte Stripe</button>}
+        </div>
 
         <div>
           <p className="phase">Accès salle</p>

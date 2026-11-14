@@ -318,3 +318,13 @@ p.sub{margin:0}
 .spaceseg button{padding:6px 14px;font-size:13px}
 .warntxt{color:var(--warn);font-weight:600}
 .okcard{border-color:var(--good)}
+.paysteps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;counter-reset:st}
+.paysteps li{counter-increment:st;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;background:var(--bg)}
+.paysteps li::before{content:counter(st);font-family:var(--display);font-size:20px;font-weight:700;width:30px;height:30px;border-radius:99px;display:flex;align-items:center;justify-content:center;background:var(--line);color:var(--muted)}
+.paysteps li.now{border-color:var(--accent)}.paysteps li.now::before{background:var(--accent);color:var(--surface)}
+.paysteps li.done::before{content:'✓';background:var(--good);color:#fff}
+.paysteps span{font-size:13px;color:var(--muted)}
+.checklist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.faq{border-top:1px solid var(--line);padding:10px 0}
+.faq summary{cursor:pointer;font-weight:600}
+.faq p{margin:8px 0 0;color:var(--muted);font-size:14px}

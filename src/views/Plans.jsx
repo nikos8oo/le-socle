@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase'
 import { fmt } from '../lib/dates'
 import { KIND_LBL, METHODS, PERIOD_LBL, TEMPLATES, money, monthly, priceText, ruleText } from '../lib/plans'
 import { Empty, Modal, Pill } from '../components/ui'
-import { stripeApi } from '../lib/stripe'
 
 export function useUsage(boxId) {
   const [usage, setUsage] = useState([])
@@ -15,7 +14,7 @@ export function useUsage(boxId) {
   return [usage, load]
 }
 
-export default function Plans({ box, data, reload, toast, log }) {
+export default function Plans({ box, data, reload, toast, log, goTo }) {
   const [edit, setEdit] = useState(null)
   const [showArch, setShowArch] = useState(false)
   const [usage, reloadUsage] = useUsage(box.id)
@@ -82,7 +81,9 @@ export default function Plans({ box, data, reload, toast, log }) {
         <div className={'kpi' + (pending.length ? ' hl' : '')}><span>Demandes à valider</span><b>{pending.length}</b><span>achats dans la boutique</span></div>
       </div>
 
-      <OnlinePayment box={box} toast={toast} />
+      {!box.stripe_charges_enabled && (
+        <div className="notice"><span style={{ flex: 1 }}>Le paiement par carte n'est pas encore activé : tes adhérents paient à la salle et tu valides ici.</span><button className="btn small" onClick={() => goTo('payments')}>Activer le paiement en ligne</button></div>
+      )}
 
       {issues.length > 0 && (
         <div className="card">
@@ -187,36 +188,5 @@ function PlanEditor({ p, types, onSave, onClose }) {
         <div className="row end"><button type="button" className="btn ghost" onClick={onClose}>Annuler</button><button className="btn">Enregistrer</button></div>
       </form>
     </Modal>
-  )
-}
-
-function OnlinePayment({ box, toast }) {
-  const [st, setSt] = useState(box.stripe_account_id ? null : { connected: false })
-  const [busy, setBusy] = useState(false)
-  useEffect(() => {
-    if (!box.stripe_account_id) return
-    stripeApi('status', { box_id: box.id }).then(setSt).catch((e) => { setSt({ connected: true, error: e.message }) })
-  }, [box.id, box.stripe_account_id])
-  async function connect() {
-    setBusy(true)
-    try { const { url } = await stripeApi('connect', { box_id: box.id }); window.location.href = url }
-    catch (e) { toast(e.message); setBusy(false) }
-  }
-  if (!st) return <div className="card"><p className="sub">Vérification du paiement en ligne…</p></div>
-  const ok = st.connected && st.stripe_charges_enabled
-  return (
-    <div className={'card' + (ok ? ' okcard' : '')}>
-      <div className="spread">
-        <div>
-          <h2>Paiement en ligne</h2>
-          {ok ? <p className="sub">Actif : tes adhérents paient par carte dans la Boutique, avec prélèvement automatique chaque mois pour les abonnements. L'argent arrive directement sur ton compte Stripe.</p>
-            : st.connected ? <p className="sub">Ton compte Stripe est créé mais pas encore validé. Termine l'inscription (identité, IBAN de la salle) pour encaisser.</p>
-            : <p className="sub">Encaisse les formules par carte bancaire, avec prélèvement automatique chaque mois. Tu crées ton compte Stripe en quelques minutes ; l'argent arrive directement sur le compte de la salle.</p>}
-          {st.error && <p className="err">{st.error}</p>}
-        </div>
-        {ok ? <div className="row"><Pill cls="good">Actif</Pill><a className="btn small ghost" href="https://dashboard.stripe.com" target="_blank" rel="noreferrer">Ouvrir Stripe</a></div>
-          : <button className="btn" disabled={busy} onClick={connect}>{busy ? 'Ouverture de Stripe…' : st.connected ? 'Terminer l’inscription Stripe' : 'Activer le paiement en ligne'}</button>}
-      </div>
-    </div>
   )
 }

@@ -42,10 +42,13 @@ async function v2(method: string, path: string, body?: unknown) {
 
 async function syncAccount(box: { id: string; stripe_account_id: string }) {
   const acct = await v2('GET', '/v2/core/accounts/' + box.stripe_account_id + '?include=configuration.merchant&include=requirements')
-  const card = acct.configuration?.merchant?.capabilities?.card_payments?.status
+  const cap = acct.configuration?.merchant?.capabilities?.card_payments || {}
+  const card = cap.status as string | undefined
   const patch = { stripe_charges_enabled: card === 'active', stripe_details_submitted: card === 'active' || card === 'pending' }
   await admin.from('boxes').update(patch).eq('id', box.id)
-  return patch
+  const entries = (acct.requirements && acct.requirements.entries) || []
+  const missing = entries.filter((e: { minimum_deadline?: { status?: string } }) => e.minimum_deadline && ['currently_due', 'past_due'].includes(e.minimum_deadline.status || '')).length
+  return { ...patch, card_status: card || 'inconnu', missing, details: (cap.status_details || []).map((d: { code: string }) => d.code) }
 }
 
 Deno.serve(async (req) => {
@@ -88,6 +91,19 @@ Deno.serve(async (req) => {
         if (!role || role === 'adherent') throw new HttpError(403, 'Accès refusé')
         if (!box.stripe_account_id) return json({ connected: false })
         return json({ connected: true, ...(await syncAccount(box)) })
+      }
+
+      // ---------- Admin plateforme : détacher le compte Stripe d'une salle (ex. compte de test) ----------
+      case 'disconnect': {
+        const { data: adm } = await admin.from('platform_admins').select('user_id').eq('user_id', user.id)
+        if (!adm || !adm.length) throw new HttpError(403, 'Réservé à l’administrateur')
+        const box = await getBox(body.box_id)
+        if (box.stripe_account_id && body.close) {
+          try { await v2('POST', '/v2/core/accounts/' + box.stripe_account_id + '/close', { applied_configurations: ['merchant'] }) } catch (_) { /* compte déjà fermé ou non fermable */ }
+        }
+        await admin.from('boxes').update({ stripe_account_id: null, stripe_charges_enabled: false, stripe_details_submitted: false }).eq('id', box.id)
+        await admin.from('members').update({ stripe_customer_id: null }).eq('box_id', box.id)
+        return json({ ok: true })
       }
 
       // ---------- Athlète : payer une formule ----------
