@@ -95,6 +95,11 @@ export default function App() {
       return { ...b, myRole: m ? m.role : 'admin', myCoach: m ? m.coach_id : null }
     })
     setBoxes(list)
+    // compte Stripe en cours de validation : on revérifie auprès de Stripe
+    list.filter((b) => b.stripe_account_id && !b.stripe_charges_enabled).forEach(async (b) => {
+      const { data: ok } = await supabase.rpc('refresh_stripe_status', { p_box: b.id })
+      if (ok) setBoxes((prev) => prev.map((x) => (x.id === b.id ? { ...x, stripe_charges_enabled: true } : x)))
+    })
     let sp = localStorage.getItem('socle-space') || ''
     if (!sp) { sp = list.some((b) => b.myRole !== 'adherent') || (adm && adm.length) ? 'salle' : 'athlete'; setSpace(sp) }
     const inSpace = list.filter((b) => (sp === 'athlete' ? b.myRole === 'adherent' : b.myRole !== 'adherent'))
