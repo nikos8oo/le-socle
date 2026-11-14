@@ -10,6 +10,7 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
   const [stats, setStats] = useState({})
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState('tous')
+  const [newCode, setNewCode] = useState('')
   const link = window.location.origin + '/?rejoindre=' + box.join_code
 
   useEffect(() => {
@@ -23,12 +24,14 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
   async function copy() {
     try { await navigator.clipboard.writeText(link); toast('Lien copié : partage-le à tes adhérents') } catch { window.prompt('Copie ce lien', link) }
   }
-  async function resetCode() {
-    if (!window.confirm("Créer un nouveau lien ? L'ancien ne fonctionnera plus (les adhérents déjà inscrits ne sont pas touchés).")) return
-    const { error } = await supabase.rpc('reset_join_code', { p_box: box.id })
+  async function changeCode(e, random) {
+    if (e) e.preventDefault()
+    if (random && !window.confirm("Tirer un nouveau code au hasard ? L'ancien ne fonctionnera plus (les adhérents déjà inscrits ne sont pas touchés).")) return
+    const { error } = await supabase.rpc('set_join_code', { p_box: box.id, p_code: random ? null : newCode })
     if (error) return toast(error.message)
+    setNewCode('')
     await onBoxChange()
-    toast('Nouveau lien créé')
+    toast('Code de salle mis à jour')
   }
   async function saveRules(e) {
     e.preventDefault()
@@ -65,9 +68,15 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
       <div className="grid g2 top">
         <div className="card">
           <h2>Inscription des adhérents</h2>
-          <p className="sub">Partage ce lien (WhatsApp, affiche avec QR code, e-mail). L'adhérent crée son compte et peut réserver tout de suite.</p>
+          <p className="sub">L'adhérent crée son compte dans l'app puis tape ce code pour retrouver ta salle. Affiche-le à l'accueil, ou envoie directement le lien.</p>
+          <div className="bigcode" aria-label="Code de la salle">{box.join_code}</div>
           <div className="linkbox"><code>{link}</code></div>
-          <div className="row"><button className="btn" onClick={copy}>Copier le lien</button><button className="btn ghost small" onClick={resetCode}>Changer de lien</button></div>
+          <div className="row"><button className="btn" onClick={copy}>Copier le lien</button></div>
+          <form className="row sep" onSubmit={(e) => changeCode(e, false)}>
+            <input value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={16} placeholder="Personnaliser, ex. BLACKWINGS" style={{ flex: 1 }} aria-label="Nouveau code" />
+            <button className="btn small" disabled={newCode.length < 4}>Changer</button>
+            <button type="button" className="btn small ghost" onClick={() => changeCode(null, true)}>Au hasard</button>
+          </form>
         </div>
         <div className="card">
           <h2>Règles de réservation</h2>

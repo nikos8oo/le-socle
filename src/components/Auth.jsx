@@ -57,6 +57,7 @@ export default function Auth({ recovery, onRecovered }) {
       <div className="authcard">
         <div className="brand dark"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
         <h1>{titles[mode]}</h1>
+        {!joining && !invited && mode === 'signup' && <p className="sub">Adhérent ? Crée ton compte, puis entre le code de ta salle.</p>}
         {joining && mode !== 'newpass' && <p className="notice">Bienvenue ! Crée ton compte pour réserver tes cours, ou connecte-toi si tu en as déjà un.</p>}
         {invited && mode !== 'newpass' && <p className="notice">Tu as été invité dans une salle. Crée ton compte avec l'adresse e-mail qui a reçu l'invitation, ou connecte-toi.</p>}
         <form onSubmit={submit} className="stack">

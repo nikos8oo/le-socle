@@ -144,7 +144,7 @@ export default function App() {
                 <div className="menupanel" onMouseLeave={() => setMenu(false)}>
                   <div className="sub" style={{ padding: '4px 8px' }}>{session.user.email}</div>
                   {boxes.length > 1 && boxes.map((b) => <button key={b.id} onClick={() => { setBoxId(b.id); localStorage.setItem('socle-box', b.id); setMenu(false) }}>{b.id === box.id ? '✓ ' : ''}{b.name}</button>)}
-                  <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>Changer ou créer une salle</button>
+                  <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>Rejoindre ou changer de salle</button>
                   <button onClick={() => supabase.auth.signOut()}>Se déconnecter</button>
                 </div>
               )}

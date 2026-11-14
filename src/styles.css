@@ -277,3 +277,8 @@ a.btn{text-decoration:none;display:inline-block}
 input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
 @media (max-width:560px){.slot{grid-template-columns:70px 1fr;}.slot-act{grid-column:1/-1}.slot-act .btn{width:100%}}
 .slot-info .pill{align-self:flex-start}
+.bigcode{font-family:var(--display);font-size:44px;font-weight:700;letter-spacing:.18em;text-align:center;padding:10px;border-radius:12px;background:var(--accent-soft);color:var(--accent)}
+.codeinput{font-family:var(--display);font-size:22px;letter-spacing:.15em;text-transform:uppercase}
+.found{display:flex;flex-direction:column;gap:6px;align-items:flex-start;background:var(--good-soft);border-radius:12px;padding:12px 14px}
+.found b{font-size:18px}
+.authcard form.row{flex-direction:row;align-items:stretch}
