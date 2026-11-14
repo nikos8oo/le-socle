@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { JOURS, addDays, fmt, fmtShort, hhmm, parse, today, wdOf } from '../lib/dates'
 import { Empty, Pill, TypeTag } from '../components/ui'
 import { STATUS, priceText, ruleText, usageText } from '../lib/plans'
+import { stripeApi } from '../lib/stripe'
 
 const LBL = { reserve: 'Réservé', attente: "En liste d'attente", present: 'Présent', absent: 'Absent', annule: 'Annulé', annule_tard: 'Annulé tard' }
 
@@ -42,6 +43,12 @@ export default function Athlete({ box, tab, toast }) {
     setSubs(data || [])
   }, [box.id, day])
   useEffect(() => { loadSubs() }, [loadSubs, rows])
+  useEffect(() => {
+    // juste après un paiement, la formule s'active en quelques secondes : on vérifie plusieurs fois
+    let n = 0
+    const iv = setInterval(() => { n++; loadSubs(); if (n >= 6) clearInterval(iv) }, 3000)
+    return () => clearInterval(iv)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     load()
@@ -81,8 +88,20 @@ export default function Athlete({ box, tab, toast }) {
     loadSubs()
   }
 
+  async function payOnline(p) {
+    setBusy('pay' + p.id)
+    try { const { url } = await stripeApi('checkout', { plan_id: p.id }); window.location.href = url }
+    catch (e) { toast(e.message); setBusy(null) }
+  }
+  async function portal() {
+    setBusy('portal')
+    try { const { url } = await stripeApi('portal', { box_id: box.id }); window.location.href = url }
+    catch (e) { toast(e.message); setBusy(null) }
+  }
+
   if (!rows) return <div className="loading">Chargement du planning…</div>
-  const current = subs.filter((u) => u.status === 'active' || u.status === 'attente_paiement')
+  const current = subs.filter((u) => u.status === 'active' || (u.status === 'attente_paiement' && u.payment_method !== 'en_ligne'))
+  const online = subs.some((u) => u.payment_method === 'en_ligne' && u.status !== 'attente_paiement')
   const MySubs = ({ title }) => (
     <div className="card">
       <h2>{title}</h2>
@@ -95,6 +114,7 @@ export default function Athlete({ box, tab, toast }) {
         ))}
         {!current.length && <Empty>Aucune formule active. Choisis-en une dans la Boutique pour réserver.</Empty>}
       </div>
+      {online && <div className="row"><button className="btn small ghost" disabled={busy === 'portal'} onClick={portal}>Gérer mon paiement (carte, factures, résiliation)</button></div>}
     </div>
   )
 
@@ -105,7 +125,7 @@ export default function Athlete({ box, tab, toast }) {
         <MySubs title="Ma formule" />
         <div className="card">
           <h2>Boutique</h2>
-          <p className="sub">Choisis ta formule. Pour l'instant, le paiement se fait à la salle : ta formule s'active dès que l'équipe a reçu ton règlement. Le paiement en ligne arrive bientôt.</p>
+          <p className="sub">{box.stripe_charges_enabled ? 'Paie par carte en toute sécurité : ta formule s’active tout de suite. Les abonnements sont prélevés automatiquement chaque mois, résiliables depuis « Gérer mon paiement ».' : "Choisis ta formule. Le paiement se fait à la salle : ta formule s'active dès que l'équipe a reçu ton règlement."}</p>
           <div className="plangrid">
             {forSale.map((p) => { const pend = subs.some((u) => u.plan_id === p.id && u.status === 'attente_paiement'); return (
               <div className="plancard" key={p.id}>
@@ -114,7 +134,11 @@ export default function Athlete({ box, tab, toast }) {
                 <span className="sub">{ruleText(p)}{p.commitment_months ? ' · engagement ' + p.commitment_months + ' mois' : ''}</span>
                 {p.course_types && <span className="sub">Cours : {p.course_types.join(', ')}</span>}
                 {p.description && <span>{p.description}</span>}
-                <button className="btn" disabled={pend} onClick={() => buy(p)}>{pend ? 'Demande envoyée' : 'Choisir'}</button>
+                {box.stripe_charges_enabled && p.price_cents > 0 ? <>
+                  <button className="btn" disabled={busy === 'pay' + p.id} onClick={() => payOnline(p)}>{busy === 'pay' + p.id ? 'Ouverture du paiement…' : 'Payer par carte'}</button>
+                  {!pend && <button className="linkbtn" onClick={() => buy(p)}>ou payer à la salle</button>}
+                  {pend && <span className="sub">Demande de paiement à la salle envoyée</span>}
+                </> : <button className="btn" disabled={pend} onClick={() => buy(p)}>{pend ? 'Demande envoyée' : 'Choisir'}</button>}
               </div>
             ) })}
             {!forSale.length && <Empty>La salle n'a pas encore mis de formule en ligne.</Empty>}

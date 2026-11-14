@@ -4,6 +4,7 @@ import { addDays, diffDays, fmt, today } from '../lib/dates'
 import { Empty, Modal, Pill } from '../components/ui'
 import { METHODS, STATUS, money, priceText, usageText } from '../lib/plans'
 import { useUsage } from './Plans'
+import { stripeApi } from '../lib/stripe'
 
 export default function Members({ box, data, reload, toast, log, onBoxChange }) {
   const t = today()
@@ -137,6 +138,11 @@ function MemberSubs({ m, subs, plans, toast, log, onClose, onChange }) {
     onChange()
   }
   async function setStatus(u, status) {
+    if (status === 'terminee' && u.payment_method === 'en_ligne') {
+      if (!window.confirm('Arrêter le prélèvement automatique de ' + m.name + ' et terminer « ' + u.name + ' » ?')) return
+      try { await stripeApi('cancel_sub', { subscription_id: u.id }) } catch (e) { return toast(e.message) }
+      return onChange()
+    }
     const patch = { status }
     if (status === 'terminee') patch.end_date = today()
     const { error } = await supabase.from('subscriptions').update(patch).eq('id', u.id)
@@ -155,7 +161,8 @@ function MemberSubs({ m, subs, plans, toast, log, onClose, onChange }) {
           <div className="prow" key={u.id}>
             <div style={{ flex: 1, minWidth: 200 }}><b>{u.name}</b> <Pill cls={STATUS[u.status][0]}>{STATUS[u.status][1]}</Pill>
               <div className="sub">{usageText(u)} · {money(u.price_cents)} · depuis le {fmt(u.start_date)}{u.end_date ? ' · jusqu’au ' + fmt(u.end_date) : ''}{u.commitment_until ? ' · engagé jusqu’au ' + fmt(u.commitment_until) : ''}</div></div>
-            {u.status === 'attente_paiement' && <button className="btn small" onClick={() => activate(u)}>Paiement reçu</button>}
+            {u.status === 'attente_paiement' && u.payment_method !== 'en_ligne' && <button className="btn small" onClick={() => activate(u)}>Paiement reçu</button>}
+            {u.payment_method === 'en_ligne' && <Pill>Prélèvement auto</Pill>}
             {u.status === 'active' && <button className="btn small ghost" onClick={() => setStatus(u, 'suspendue')}>Suspendre</button>}
             {u.status === 'suspendue' && <button className="btn small ghost" onClick={() => setStatus(u, 'active')}>Réactiver</button>}
             {(u.status === 'active' || u.status === 'suspendue') && <button className="btn small ghost" onClick={() => setStatus(u, 'terminee')}>Terminer</button>}

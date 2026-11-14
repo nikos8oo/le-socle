@@ -44,10 +44,18 @@ Le schéma, les fonctions et les règles d'accès (RLS) sont dans `supabase/migr
 - Dans **Aujourd'hui**, chaque cours affiche les inscrits en direct ; l'owner ou le coach fait l'appel (présent / absent, ou venu sans réserver). La fréquentation et la dernière venue de l'adhérent se mettent à jour toutes seules.
 - Un adhérent ne voit que le planning, les places et ses propres réservations : jamais les autres adhérents, l'équipe ni les chiffres.
 
+## Paiement en ligne (Stripe Connect)
+
+- Chaque salle relie son propre compte Stripe (onglet **Formules → Activer le paiement en ligne**) ; les paiements arrivent directement chez elle.
+- L'athlète paie par carte dans la Boutique : abonnement prélevé automatiquement (mois / trimestre / an) ou paiement unique (carnets). « Gérer mon paiement » ouvre l'espace client Stripe (carte, factures, résiliation en fin de période).
+- Fonctions serveur : `supabase/functions/stripe-api` (inscription des salles, paiement, espace client, résiliation) et `supabase/functions/stripe-webhook` (active, renouvelle, suspend, termine les formules).
+- La clé Stripe et le secret du webhook sont rangés dans le coffre chiffré Supabase (`vault`), lisibles uniquement par le serveur. En production, préférer les secrets Edge Functions `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` (prioritaires sur le coffre).
+- Commission de la plateforme : secret Edge Functions `PLATFORM_FEE_PERCENT` (0 par défaut).
+
 ## Feuille de route
 
 - Version pilote : Aujourd'hui, Planning, Séances d'essai, Événements, Équipe, Ressources.
 - Étape 1 (fait) : réservations des adhérents, liste d'attente, appel en direct.
-- Étape 2 : abonnements et paiements (Stripe, prélèvements SEPA), compteurs de séances.
+- Étape 2 (fait) : formules, boutique, paiement par carte avec prélèvement automatique.
 - Étape 3 : aide à la migration depuis Deciplus, abonnement Le Socle pour les salles.
 - Ensuite : suivi des nouveaux adhérents (60 jours), simulateur LTV, réunion d'équipe, document d'onboarding coach en PDF, rappels par e-mail, abonnement Stripe.

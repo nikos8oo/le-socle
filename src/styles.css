@@ -317,3 +317,4 @@ p.sub{margin:0}
 .spaceseg{align-self:flex-start}
 .spaceseg button{padding:6px 14px;font-size:13px}
 .warntxt{color:var(--warn);font-weight:600}
+.okcard{border-color:var(--good)}

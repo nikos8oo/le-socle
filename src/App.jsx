@@ -40,7 +40,10 @@ export default function App() {
     const join = p.get('rejoindre')
     if (inv) { localStorage.setItem('socle-invite', inv); localStorage.setItem('socle-space', 'salle'); setSpaceRaw('salle') }
     if (join) { localStorage.setItem('socle-join', join); localStorage.setItem('socle-space', 'athlete'); setSpaceRaw('athlete') }
-    if (inv || join) window.history.replaceState(null, '', window.location.pathname)
+    const st = p.get('stripe'), pay = p.get('paiement')
+    if (st) { setTab('plans'); setTimeout(() => toast(st === 'retour' ? 'Retour de Stripe : vérification de ton compte…' : 'Lien expiré : clique à nouveau sur « Activer le paiement en ligne »'), 600) }
+    if (pay) { setTab(pay === 'ok' ? 'mine' : 'shop'); setTimeout(() => toast(pay === 'ok' ? 'Paiement réussi ! Ta formule s’active dans quelques secondes.' : 'Paiement annulé : rien n’a été débité.'), 600) }
+    if (inv || join || st || pay) window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
   useEffect(() => {
@@ -82,7 +85,7 @@ export default function App() {
       if (session.user.user_metadata?.join_code) supabase.auth.updateUser({ data: { join_code: null } })
     }
     const [{ data: bx }, { data: mem }, { data: adm }] = await Promise.all([
-      supabase.from('boxes').select('id, name, settings, join_code').order('created_at'),
+      supabase.from('boxes').select('id, name, settings, join_code, stripe_account_id, stripe_charges_enabled').order('created_at'),
       supabase.from('box_members').select('box_id, role, coach_id').eq('user_id', uid),
       supabase.from('platform_admins').select('user_id').eq('user_id', uid),
     ])
