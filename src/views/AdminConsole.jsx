@@ -28,8 +28,27 @@ export default function AdminConsole({ toast, onOpen }) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [load])
 
+  const [demoBusy, setDemoBusy] = useState(false)
+  async function createDemo() {
+    if (!window.confirm('Créer une salle de démo complète (80 adhérents, planning, formules, 2 mois d’historique) ? Tu pourras la supprimer en un clic.')) return
+    setDemoBusy(true)
+    const { data, error } = await supabase.rpc('admin_create_demo')
+    setDemoBusy(false)
+    if (error) return toast(error.message)
+    toast('Salle de démo prête')
+    await load()
+    onOpen(data)
+  }
+  async function deleteDemo(r) {
+    if (!window.confirm('Supprimer définitivement « ' + r.name + ' » et toutes ses données de démo ?')) return
+    const { error } = await supabase.rpc('admin_delete_demo', { p_box: r.id })
+    if (error) return toast(error.message)
+    toast('Salle de démo supprimée')
+    load()
+  }
+
   if (!rows) return <div className="loading">Chargement des salles…</div>
-  const live = rows.filter((r) => r.status === 'active' || r.status === 'pilote')
+  const live = rows.filter((r) => (r.status === 'active' || r.status === 'pilote') && !r.is_demo)
   const list = rows.filter((r) => (st === 'tous' ? r.status !== 'archivee' : r.status === st)).filter((r) => !q || (r.name + ' ' + (r.city || '') + ' ' + (r.owners || '')).toLowerCase().includes(q.toLowerCase()))
   const quiet = live.filter((r) => !r.last_activity || Date.now() - new Date(r.last_activity).getTime() > 7 * 864e5)
 
@@ -50,6 +69,7 @@ export default function AdminConsole({ toast, onOpen }) {
           <div className="row">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher" aria-label="Rechercher une salle" />
             <div className="seg">{[['tous', 'Toutes'], ['active', 'Actives'], ['pilote', 'Pilotes'], ['suspendue', 'Suspendues'], ['archivee', 'Archivées']].map(([k, l]) => <button key={k} className="rper" aria-pressed={st === k} onClick={() => setSt(k)}>{l}</button>)}</div>
+            <button className="btn ghost" disabled={demoBusy} onClick={createDemo}>{demoBusy ? 'Création de la démo…' : 'Créer une salle de démo'}</button>
             <button className="btn" onClick={() => setCreating(true)}>Nouvelle salle</button>
           </div>
         </div>
@@ -58,7 +78,7 @@ export default function AdminConsole({ toast, onOpen }) {
           <tbody>
             {list.map((r) => (
               <tr key={r.id}>
-                <td><b>{r.name}</b><div className="sub">{r.city ? r.city + ' · ' : ''}code {r.join_code}</div></td>
+                <td><b>{r.name}</b> {r.is_demo && <Pill cls="warn">Démo</Pill>}<div className="sub">{r.city ? r.city + ' · ' : ''}code {r.join_code}</div></td>
                 <td><Pill cls={STATUS[r.status][0]}>{STATUS[r.status][1]}</Pill></td>
                 <td>{r.owners ? <span className="sub">{r.owners}</span> : r.pending_invites ? <Pill cls="warn">Invitation en attente</Pill> : <Pill cls="bad">Pas d'owner</Pill>}</td>
                 <td>{r.adherents}</td>
@@ -67,7 +87,7 @@ export default function AdminConsole({ toast, onOpen }) {
                 <td>{r.stripe_charges_enabled ? <Pill cls="good">Actif</Pill> : r.stripe_account_id ? <Pill cls="warn">En cours</Pill> : <Pill>Non</Pill>}</td>
                 <td>{r.bookings_30}{r.bookings_30 ? <span className="sub"> · {Math.round(r.presents_30 / r.bookings_30 * 100)} % venus</span> : null}</td>
                 <td className={r.last_activity && Date.now() - new Date(r.last_activity).getTime() <= 7 * 864e5 ? '' : 'warntxt'}>{ago(r.last_activity)}</td>
-                <td><div className="row"><button className="btn small" onClick={() => onOpen(r.id)}>Ouvrir</button><button className="btn small ghost" onClick={() => setSel(r)}>Gérer</button></div></td>
+                <td><div className="row"><button className="btn small" onClick={() => onOpen(r.id)}>Ouvrir</button>{r.is_demo ? <button className="btn small ghost" onClick={() => deleteDemo(r)}>Supprimer la démo</button> : <button className="btn small ghost" onClick={() => setSel(r)}>Gérer</button>}</div></td>
               </tr>
             ))}
           </tbody>
