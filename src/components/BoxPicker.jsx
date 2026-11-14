@@ -48,7 +48,7 @@ export default function BoxPicker({ boxes, space, onPick, onCreated, onSignOut, 
           <div className="list">
             {boxes.map((b) => (
               <button key={b.id} className="boxrow" onClick={() => onPick(b.id)}>
-                <b>{b.name}</b><span className="sub">{ROLE[b.myRole] || 'Admin plateforme'}</span>
+                <span className="row" style={{ gap: 10 }}>{b.logo_url && <img className="picklogo" src={b.logo_url} alt="" />}<b>{b.name}</b></span><span className="sub">{ROLE[b.myRole] || 'Admin plateforme'}</span>
               </button>
             ))}
           </div>

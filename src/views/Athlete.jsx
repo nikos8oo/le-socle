@@ -196,6 +196,7 @@ export default function Athlete({ box, tab, toast }) {
             {!history.length && <Empty>Pas encore de cours passés.</Empty>}
           </div>
         </div>
+        <BoxCard box={box} />
         <p className="sub">Annulation sans pénalité jusqu'à {rules.cancel_hours} h avant le cours. Les réservations ouvrent {rules.open_days} jours à l'avance.</p>
       </div>
     )
@@ -204,6 +205,7 @@ export default function Athlete({ box, tab, toast }) {
   const list = rows.filter((r) => r.day === day)
   return (
     <div className="stack">
+      {box.welcome_message && history.length === 0 && <div className="welcome"><b>Bienvenue chez {box.name} !</b><span>{box.welcome_message}</span></div>}
       {!active && <p className="notice">Ton compte est suspendu : contacte la salle pour réserver.</p>}
       {!rules.enabled && <p className="notice">Les réservations en ligne sont fermées pour le moment.</p>}
       {current.length > 0 ? <div className="subchips">{current.map((u) => <span key={u.id} className={'subchip' + (u.status === 'attente_paiement' ? ' wait' : '')}><b>{u.name}</b> {usageText(u)}{u.kind === 'hebdo' ? ' (semaine du ' + fmtShort(weekStart(day)) + ')' : ''}</span>)}</div>
@@ -234,3 +236,26 @@ function d2(d, t) {
 }
 
 function weekStart(d) { return addDays(d, -wdOf(d)) }
+
+function BoxCard({ box }) {
+  const addr = [box.address, [box.postal_code, box.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+  const any = addr || box.phone || box.email || box.website || box.instagram || box.opening_hours || box.rules_url
+  if (!any && !box.tagline) return null
+  return (
+    <div className="card">
+      <div className="row" style={{ alignItems: 'center' }}>
+        {box.logo_url && <img className="cardlogo" src={box.logo_url} alt="" />}
+        <div><h3>{box.name}</h3>{box.tagline && <span className="sub">{box.tagline}</span>}</div>
+      </div>
+      <div className="contact">
+        {addr && <a href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(box.name + ' ' + addr)} target="_blank" rel="noreferrer">📍 {addr}</a>}
+        {box.phone && <a href={'tel:' + box.phone.replace(/\s/g, '')}>📞 {box.phone}</a>}
+        {box.email && <a href={'mailto:' + box.email}>✉️ {box.email}</a>}
+        {box.instagram && <a href={'https://instagram.com/' + box.instagram} target="_blank" rel="noreferrer">📸 @{box.instagram}</a>}
+        {box.website && <a href={box.website} target="_blank" rel="noreferrer">🌐 {box.website.replace(/^https?:\/\//, '')}</a>}
+      </div>
+      {box.opening_hours && <div><p className="phase">Horaires d'accueil</p><p className="sub" style={{ whiteSpace: 'pre-line' }}>{box.opening_hours}</p></div>}
+      {box.rules_url && <a className="linkbtn" href={box.rules_url} target="_blank" rel="noreferrer">Règlement intérieur et conditions générales</a>}
+    </div>
+  )
+}

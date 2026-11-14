@@ -15,10 +15,11 @@ import Members from './views/Members'
 import Plans from './views/Plans'
 import AdminConsole from './views/AdminConsole'
 import Payments from './views/Payments'
+import BoxInfo from './views/BoxInfo'
 
 // Onglets du quotidien dans la barre ; la gestion de la salle dans la roue des réglages
 const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['trials', "Séances d'essai"], ['events', 'Événements']]
-const OWNER_SETTINGS = [['plans', 'Formules et tarifs', 'Ce que tes adhérents achètent, demandes à valider'], ['payments', 'Paiement en ligne', 'Ton compte Stripe et l’encaissement par carte'], ['team', 'Équipe', 'Coachs, observations, accès'], ['resources', 'Ressources', 'Documents de la méthode, formation']]
+const OWNER_SETTINGS = [['infos', 'Infos de la salle', 'Nom, logo, coordonnées, message de bienvenue'], ['plans', 'Formules et tarifs', 'Ce que tes adhérents achètent, demandes à valider'], ['payments', 'Paiement en ligne', 'Ton compte Stripe et l’encaissement par carte'], ['team', 'Équipe', 'Coachs, observations, accès'], ['resources', 'Ressources', 'Documents de la méthode, formation']]
 const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations'], ['shop', 'Boutique']]
 const COACH_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['trials', 'Mes essais'], ['events', 'Événements'], ['resources', 'Ressources']]
 
@@ -89,7 +90,7 @@ export default function App() {
       if (session.user.user_metadata?.join_code) supabase.auth.updateUser({ data: { join_code: null } })
     }
     const [{ data: bx }, { data: mem }, { data: adm }] = await Promise.all([
-      supabase.from('boxes').select('id, name, settings, join_code, stripe_account_id, stripe_charges_enabled').order('created_at'),
+      supabase.from('boxes').select('id, name, settings, join_code, stripe_account_id, stripe_charges_enabled, logo_url, tagline, address, postal_code, city, phone, email, website, instagram, siret, opening_hours, welcome_message, rules_url').order('created_at'),
       supabase.from('box_members').select('box_id, role, coach_id').eq('user_id', uid),
       supabase.from('platform_admins').select('user_id').eq('user_id', uid),
     ])
@@ -220,7 +221,7 @@ export default function App() {
         </div>
       </header>
       <main>
-        <div className="head"><h1 className="boxname">{box.name}</h1>{inSettings && <span className="crumb">⚙ Réglages · {inSettings[1]}</span>}</div>
+        <div className="head">{box.logo_url && <img className="headlogo" src={box.logo_url} alt="" />}<h1 className="boxname">{box.name}</h1>{inSettings && <span className="crumb">⚙ Réglages · {inSettings[1]}</span>}</div>
         {error && <p className="notice">Erreur de chargement : {error} <button className="btn small ghost" onClick={reload}>Réessayer</button></p>}
         {role === 'adherent' ? <Athlete box={box} tab={current} toast={toast} /> : !data ? <div className="loading">Chargement…</div> : (
           <>
@@ -229,6 +230,7 @@ export default function App() {
             {current === 'members' && <Members {...ctx} onBoxChange={loadBoxes} />}
             {current === 'plans' && <Plans {...ctx} goTo={setTab} />}
             {current === 'payments' && <Payments {...ctx} />}
+            {current === 'infos' && <BoxInfo {...ctx} onBoxChange={loadBoxes} />}
             {current === 'trials' && <Trials {...ctx} />}
             {current === 'events' && <Events {...ctx} />}
             {current === 'team' && <Team {...ctx} />}

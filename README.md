@@ -52,6 +52,12 @@ Le schéma, les fonctions et les règles d'accès (RLS) sont dans `supabase/migr
 - La clé Stripe et le secret du webhook sont rangés dans le coffre chiffré Supabase (`vault`), lisibles uniquement par le serveur. En production, préférer les secrets Edge Functions `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` (prioritaires sur le coffre).
 - Commission de la plateforme : secret Edge Functions `PLATFORM_FEE_PERCENT` (0 par défaut).
 
+## À savoir pour faire évoluer la base
+
+- La table `boxes` est lue colonne par colonne (les notes privées de l'admin, `admin_notes`, ne sont jamais exposées). **Toute nouvelle colonne de `boxes` doit être ajoutée au `grant select (…)`** (voir `20261114225000_infos_salle.sql`).
+- Seul l'admin plateforme peut changer le statut d'une salle ; seules les fonctions serveur peuvent changer les réglages Stripe.
+- Les logos sont stockés dans le bucket public `box-logos`, dans un dossier par salle (écriture réservée à l'owner).
+
 ## Feuille de route
 
 - Version pilote : Aujourd'hui, Planning, Séances d'essai, Événements, Équipe, Ressources.
