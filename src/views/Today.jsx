@@ -4,6 +4,7 @@ import { JOURS, MOIS, addDays, diffDays, fmt, hhmm, parse, today, wdOf } from '.
 import { ONB_STEPS, whoName } from '../lib/method'
 import { Empty, Pill, TypeTag, statusOf } from '../components/ui'
 import Roll, { useDayBookings, useWeekSchedule } from '../components/Roll'
+import { useUsage } from './Plans'
 
 export default function Today({ box, role, data, reload, log, toast, myCoach, me, goTo }) {
   const t = today()
@@ -35,6 +36,9 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
   const [bk, reloadBk] = useDayBookings(box.id, D)
   const hasBk = bk.length > 0
   const week = useWeekSchedule(box.id, t)
+  const [usage] = useUsage(role === 'owner' ? box.id : null)
+  const pendingBuy = usage.filter((u) => u.status === 'attente_paiement' && u.payment_method !== 'en_ligne').length
+  const payIssues = usage.filter((u) => u.status !== 'terminee' && u.payment_issue).length
   // un nouvel adhérent vient de réserver : on recharge la liste pour afficher son nom
   useEffect(() => { if (bk.some((r) => !data.members.some((m) => m.id === r.member_id))) reload() }, [bk]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setPres({}), [D])
@@ -111,6 +115,13 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
         </div>
       </div>
       {role === 'coach' && !me && <p className="notice">Ton compte n'est pas encore relié à une fiche coach. Demande à l'owner de t'inviter depuis sa fiche.</p>}
+
+      {role === 'owner' && (pendingBuy > 0 || payIssues > 0) && (
+        <div className="notice">
+          <span style={{ flex: 1 }}>{pendingBuy > 0 && <><b>{pendingBuy}</b> demande{pendingBuy > 1 ? 's' : ''} de formule à valider (paiement à la salle). </>}{payIssues > 0 && <><b>{payIssues}</b> paiement{payIssues > 1 ? 's' : ''} par carte à surveiller.</>}</span>
+          <button className="btn small" onClick={() => goTo('plans')}>Voir dans Formules</button>
+        </div>
+      )}
 
       {week.length > 0 && (
         <div className="card">

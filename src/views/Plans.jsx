@@ -7,6 +7,7 @@ import { Empty, Modal, Pill } from '../components/ui'
 export function useUsage(boxId) {
   const [usage, setUsage] = useState([])
   const load = useCallback(async () => {
+    if (!boxId) return
     const { data } = await supabase.rpc('subscription_usage', { p_box: boxId })
     setUsage(data || [])
   }, [boxId])

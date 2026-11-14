@@ -16,7 +16,9 @@ import Plans from './views/Plans'
 import AdminConsole from './views/AdminConsole'
 import Payments from './views/Payments'
 
-const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['plans', 'Formules'], ['payments', 'Paiements'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
+// Onglets du quotidien dans la barre ; la gestion de la salle dans la roue des réglages
+const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['trials', "Séances d'essai"], ['events', 'Événements']]
+const OWNER_SETTINGS = [['plans', 'Formules et tarifs', 'Ce que tes adhérents achètent, demandes à valider'], ['payments', 'Paiement en ligne', 'Ton compte Stripe et l’encaissement par carte'], ['team', 'Équipe', 'Coachs, observations, accès'], ['resources', 'Ressources', 'Documents de la méthode, formation']]
 const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations'], ['shop', 'Boutique']]
 const COACH_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['trials', 'Mes essais'], ['events', 'Événements'], ['resources', 'Ressources']]
 
@@ -29,6 +31,7 @@ export default function App() {
   const [tab, setTab] = useState('today')
   const [menu, setMenu] = useState(false)
   const [joinClash, setJoinClash] = useState(null)
+  const [gear, setGear] = useState(false)
   const [space, setSpaceRaw] = useState(() => localStorage.getItem('socle-space') || '')
   const setSpace = (v) => { setSpaceRaw(v); if (v) localStorage.setItem('socle-space', v); else localStorage.removeItem('socle-space') }
   const [theme, setTheme] = useState(() => localStorage.getItem('socle-theme') || '')
@@ -170,7 +173,9 @@ export default function App() {
   }
 
   const tabs = role === 'owner' ? OWNER_TABS : role === 'adherent' ? ATH_TABS : COACH_TABS
-  const current = tabs.some((t) => t[0] === tab) ? tab : tabs[0][0]
+  const settingsTabs = role === 'owner' ? OWNER_SETTINGS : []
+  const current = tabs.some((t) => t[0] === tab) || settingsTabs.some((t) => t[0] === tab) ? tab : tabs[0][0]
+  const inSettings = settingsTabs.find((t) => t[0] === current)
   const me = data ? data.coaches.find((c) => c.id === box.myCoach) : null
   const ctx = { box, role, data, reload, log, toast, session, myCoach: box.myCoach, me, isAdmin }
   const effDark = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -184,9 +189,20 @@ export default function App() {
             {tabs.map(([k, l]) => <button key={k} aria-current={current === k ? 'page' : undefined} className={current === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}
           </nav>
           <div className="tb-right">
+            {settingsTabs.length > 0 && (
+              <div className="menu">
+                <button className={'iconbtn gearbtn' + (inSettings ? ' on' : '')} title="Réglages de la salle" aria-label="Réglages de la salle" aria-expanded={gear} onClick={() => { setGear(!gear); setMenu(false) }}>⚙</button>
+                {gear && (
+                  <div className="menupanel gearpanel" onMouseLeave={() => setGear(false)}>
+                    <div className="sub" style={{ padding: '4px 8px' }}>Réglages de la salle</div>
+                    {settingsTabs.map(([k, l, d]) => <button key={k} className={current === k ? 'sel' : ''} onClick={() => { setTab(k); setGear(false) }}><b>{l}</b><small>{d}</small></button>)}
+                  </div>
+                )}
+              </div>
+            )}
             <button className="iconbtn" title={effDark ? 'Version claire' : 'Version sombre'} onClick={() => { const t = effDark ? 'light' : 'dark'; setTheme(t); localStorage.setItem('socle-theme', t) }}>{effDark ? '☀' : '☾'}</button>
             <div className="menu">
-              <button className="menubtn" onClick={() => setMenu(!menu)} aria-expanded={menu}>
+              <button className="menubtn" onClick={() => { setMenu(!menu); setGear(false) }} aria-expanded={menu}>
                 <span className="pill neutral">{role === 'owner' ? 'Owner' : role === 'adherent' ? 'Adhérent' : 'Coach'}</span> <span className="hide-s">{box.name}</span> ▾
               </button>
               {menu && (
@@ -204,7 +220,7 @@ export default function App() {
         </div>
       </header>
       <main>
-        <div className="head"><h1 className="boxname">{box.name}</h1></div>
+        <div className="head"><h1 className="boxname">{box.name}</h1>{inSettings && <span className="crumb">⚙ Réglages · {inSettings[1]}</span>}</div>
         {error && <p className="notice">Erreur de chargement : {error} <button className="btn small ghost" onClick={reload}>Réessayer</button></p>}
         {role === 'adherent' ? <Athlete box={box} tab={current} toast={toast} /> : !data ? <div className="loading">Chargement…</div> : (
           <>
