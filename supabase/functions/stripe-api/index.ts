@@ -1,5 +1,5 @@
 // Paiement en ligne : inscription Stripe des salles, paiement des formules, espace client.
-import { Stripe, admin, cors, json, stripe, API_VERSION } from '../_shared/stripe.ts'
+import { Stripe, admin, cors, json, secret, stripe, API_VERSION } from '../_shared/stripe.ts'
 
 const FEE = Number(Deno.env.get('PLATFORM_FEE_PERCENT') || 0) // commission de la plateforme, en %
 const INTERVAL: Record<string, { interval: 'month' | 'year'; interval_count: number }> = {
@@ -27,10 +27,23 @@ function safeReturn(url: unknown): string {
   return u.origin
 }
 
+// API Stripe v2 (comptes des salles) : obligatoire pour les nouvelles plateformes Connect
+const V2_VERSION = '2026-10-28.endive'
+async function v2(method: string, path: string, body?: unknown) {
+  const key = (await secret('STRIPE_SECRET_KEY', 'stripe_secret_key'))!
+  const res = await fetch('https://api.stripe.com' + path, {
+    method, headers: { Authorization: 'Bearer ' + key, 'Stripe-Version': V2_VERSION, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const j = await res.json()
+  if (!res.ok) throw new HttpError(400, 'Stripe : ' + ((j.error && (j.error.user_message || j.error.message)) || res.status))
+  return j
+}
+
 async function syncAccount(box: { id: string; stripe_account_id: string }) {
-  const s = await stripe()
-  const acct = await s.accounts.retrieve(box.stripe_account_id)
-  const patch = { stripe_charges_enabled: !!acct.charges_enabled, stripe_details_submitted: !!acct.details_submitted }
+  const acct = await v2('GET', '/v2/core/accounts/' + box.stripe_account_id + '?include=configuration.merchant&include=requirements')
+  const card = acct.configuration?.merchant?.capabilities?.card_payments?.status
+  const patch = { stripe_charges_enabled: card === 'active', stripe_details_submitted: card === 'active' || card === 'pending' }
   await admin.from('boxes').update(patch).eq('id', box.id)
   return patch
 }
@@ -52,17 +65,20 @@ Deno.serve(async (req) => {
         if (role !== 'owner' && role !== 'admin') throw new HttpError(403, "Réservé à l'owner")
         let acctId = box.stripe_account_id
         if (!acctId) {
-          const acct = await s.accounts.create({
-            type: 'standard', country: 'FR', email: user.email || undefined,
-            business_profile: { name: box.name }, metadata: { box_id: box.id },
+          // Plateforme française : l'identité (nom, e-mail…) est saisie par l'owner pendant l'inscription Stripe
+          const acct = await v2('POST', '/v2/core/accounts', {
+            dashboard: 'full', identity: { country: 'fr' },
+            defaults: { currency: 'eur', locales: ['fr-FR'], responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' } },
+            configuration: { merchant: { capabilities: { card_payments: { requested: true } } } },
+            metadata: { box_id: box.id, box_name: box.name },
           })
           acctId = acct.id
           await admin.from('boxes').update({ stripe_account_id: acctId }).eq('id', box.id)
         }
         const origin = safeReturn(body.return_url)
-        const link = await s.accountLinks.create({
-          account: acctId, type: 'account_onboarding',
-          refresh_url: origin + '/?stripe=refresh', return_url: origin + '/?stripe=retour',
+        const link = await v2('POST', '/v2/core/account_links', {
+          account: acctId,
+          use_case: { type: 'account_onboarding', account_onboarding: { refresh_url: origin + '/?stripe=refresh', return_url: origin + '/?stripe=retour' } },
         })
         return json({ url: link.url })
       }
@@ -187,6 +203,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     const status = e instanceof HttpError ? e.status : 500
     console.error(e)
-    return json({ error: (e as Error).message || String(e) }, status)
+    let msg = (e as Error).message || String(e)
+    if (/signed up for Connect/i.test(msg)) msg = 'Stripe Connect n’est pas encore activé sur le compte de la plateforme.'
+    return json({ error: msg }, status)
   }
 })
