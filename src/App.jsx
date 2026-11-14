@@ -10,8 +10,11 @@ import Trials from './views/Trials'
 import Events from './views/Events'
 import Team from './views/Team'
 import Resources from './views/Resources'
+import Athlete from './views/Athlete'
+import Members from './views/Members'
 
-const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
+const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
+const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations']]
 const COACH_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['trials', 'Mes essais'], ['events', 'Événements'], ['resources', 'Ressources']]
 
 export default function App() {
@@ -29,10 +32,10 @@ export default function App() {
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
     const inv = p.get('invite')
-    if (inv) {
-      localStorage.setItem('socle-invite', inv)
-      window.history.replaceState(null, '', window.location.pathname)
-    }
+    const join = p.get('rejoindre')
+    if (inv) localStorage.setItem('socle-invite', inv)
+    if (join) localStorage.setItem('socle-join', join)
+    if (inv || join) window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
   useEffect(() => {
@@ -59,8 +62,15 @@ export default function App() {
       if (error) toast(error.message)
       else { toast('Invitation acceptée, bienvenue !'); setBoxId(data); localStorage.setItem('socle-box', data) }
     }
+    const jc = localStorage.getItem('socle-join')
+    if (jc) {
+      const { data, error } = await supabase.rpc('join_box', { code: jc, full_name: session.user.user_metadata?.full_name || null })
+      localStorage.removeItem('socle-join')
+      if (error) toast(error.message)
+      else { setBoxId(data); localStorage.setItem('socle-box', data) }
+    }
     const [{ data: bx }, { data: mem }, { data: adm }] = await Promise.all([
-      supabase.from('boxes').select('id, name, settings').order('created_at'),
+      supabase.from('boxes').select('id, name, settings, join_code').order('created_at'),
       supabase.from('box_members').select('box_id, role, coach_id').eq('user_id', uid),
       supabase.from('platform_admins').select('user_id').eq('user_id', uid),
     ])
@@ -76,8 +86,8 @@ export default function App() {
   useEffect(() => { loadBoxes() }, [loadBoxes])
 
   const box = useMemo(() => (boxes || []).find((b) => b.id === boxId) || null, [boxes, boxId])
-  const role = box ? (box.myRole === 'coach' ? 'coach' : 'owner') : null
-  const { data, error, reload, log } = useBox(box ? box.id : null)
+  const role = box ? (box.myRole === 'coach' ? 'coach' : box.myRole === 'adherent' ? 'adherent' : 'owner') : null
+  const { data, error, reload, log } = useBox(box && role !== 'adherent' ? box.id : null)
 
   if (session === undefined) return <div className="loading">Chargement…</div>
   if (!session || recovery) return <Auth recovery={recovery} onRecovered={() => { setRecovery(false); toast('Mot de passe mis à jour') }} />
@@ -88,8 +98,8 @@ export default function App() {
       onSignOut={() => supabase.auth.signOut()} />
   }
 
-  const tabs = role === 'owner' ? OWNER_TABS : COACH_TABS
-  const current = tabs.some((t) => t[0] === tab) ? tab : 'today'
+  const tabs = role === 'owner' ? OWNER_TABS : role === 'adherent' ? ATH_TABS : COACH_TABS
+  const current = tabs.some((t) => t[0] === tab) ? tab : tabs[0][0]
   const me = data ? data.coaches.find((c) => c.id === box.myCoach) : null
   const ctx = { box, role, data, reload, log, toast, session, myCoach: box.myCoach, me }
   const effDark = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -106,7 +116,7 @@ export default function App() {
             <button className="iconbtn" title={effDark ? 'Version claire' : 'Version sombre'} onClick={() => { const t = effDark ? 'light' : 'dark'; setTheme(t); localStorage.setItem('socle-theme', t) }}>{effDark ? '☀' : '☾'}</button>
             <div className="menu">
               <button className="menubtn" onClick={() => setMenu(!menu)} aria-expanded={menu}>
-                <span className="pill neutral">{role === 'owner' ? 'Owner' : 'Coach'}</span> <span className="hide-s">{box.name}</span> ▾
+                <span className="pill neutral">{role === 'owner' ? 'Owner' : role === 'adherent' ? 'Adhérent' : 'Coach'}</span> <span className="hide-s">{box.name}</span> ▾
               </button>
               {menu && (
                 <div className="menupanel" onMouseLeave={() => setMenu(false)}>
@@ -123,10 +133,11 @@ export default function App() {
       <main>
         <div className="head"><h1 className="boxname">{box.name}</h1></div>
         {error && <p className="notice">Erreur de chargement : {error} <button className="btn small ghost" onClick={reload}>Réessayer</button></p>}
-        {!data ? <div className="loading">Chargement…</div> : (
+        {role === 'adherent' ? <Athlete box={box} tab={current} toast={toast} /> : !data ? <div className="loading">Chargement…</div> : (
           <>
             {current === 'today' && <Today {...ctx} goTo={setTab} />}
             {current === 'planning' && <Planning {...ctx} />}
+            {current === 'members' && <Members {...ctx} onBoxChange={loadBoxes} />}
             {current === 'trials' && <Trials {...ctx} />}
             {current === 'events' && <Events {...ctx} />}
             {current === 'team' && <Team {...ctx} />}

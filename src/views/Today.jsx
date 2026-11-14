@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { JOURS, MOIS, addDays, diffDays, fmt, hhmm, parse, today, wdOf } from '../lib/dates'
 import { ONB_STEPS, whoName } from '../lib/method'
 import { Empty, Pill, TypeTag, statusOf } from '../components/ui'
+import Roll, { useDayBookings } from '../components/Roll'
 
 export default function Today({ box, role, data, reload, log, toast, myCoach, me, goTo }) {
   const t = today()
@@ -31,6 +32,8 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
   const courses = data.courses.filter((c) => c.weekday === wd)
   const att = Object.fromEntries(data.attendance.filter((a) => a.day === D).map((a) => [a.course_id, a.present]))
   const [pres, setPres] = useState({})
+  const [bk, reloadBk] = useDayBookings(box.id, D)
+  const hasBk = bk.length > 0
   useEffect(() => setPres({}), [D])
   const trialsDay = data.trials.filter((e) => e.day === D)
   const evs = data.events.filter((e) => e.day >= D && e.day <= addDays(D, 45))
@@ -137,21 +140,25 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
           <div className="card">
             <div className="spread"><h2>Cours du jour</h2><span className="sub">{courses.length} cours</span></div>
             {!courses.length && <Empty>Pas de cours ce jour-là.</Empty>}
-            {role === 'owner' && courses.length > 0 ? (
-              <form onSubmit={saveAttendance}>
-                <div className="list">
-                  {courses.map((c) => (
-                    <div className="prow" key={c.id}>
-                      <TypeTag name={c.type_name} types={data.course_types} /><b className="num">{hhmm(c.start_time)}</b>
-                      {att[c.id] !== undefined && <Pill cls={att[c.id] / c.capacity >= 0.9 ? 'warn' : att[c.id] / c.capacity >= 0.6 ? 'good' : 'bad'}>{Math.round(att[c.id] / c.capacity * 100)} %</Pill>}
-                      <label className="inline right">Présents <input type="number" min="0" style={{ width: 70 }} value={pres[c.id] ?? att[c.id] ?? ''} onChange={(e) => setPres({ ...pres, [c.id]: e.target.value })} /> / {c.capacity}</label>
-                    </div>
-                  ))}
-                </div>
-                {D <= t ? <div className="row end"><button className="btn small">Enregistrer la fréquentation</button></div> : <p className="sub">La fréquentation se saisit le jour même ou après.</p>}
-              </form>
-            ) : (
-              <div className="list">{courses.map((c) => <div className="prow" key={c.id}><TypeTag name={c.type_name} types={data.course_types} /><b className="num">{hhmm(c.start_time)}</b><span className="sub right">{c.capacity} places</span></div>)}</div>
+            <div className="list">
+              {courses.map((c) => <Roll key={c.id} course={c} day={D} rows={bk} members={data.members} types={data.course_types} canRoll={D <= t} toast={toast} onChange={() => { reloadBk(); reload() }} />)}
+            </div>
+            {role === 'owner' && courses.length > 0 && !hasBk && (
+              <details className="manual">
+                <summary className="sub">Pas de réservations ce jour-là : saisir la fréquentation à la main</summary>
+                <form onSubmit={saveAttendance}>
+                  <div className="list">
+                    {courses.map((c) => (
+                      <div className="prow" key={c.id}>
+                        <TypeTag name={c.type_name} types={data.course_types} /><b className="num">{hhmm(c.start_time)}</b>
+                        {att[c.id] !== undefined && <Pill cls={att[c.id] / c.capacity >= 0.9 ? 'warn' : att[c.id] / c.capacity >= 0.6 ? 'good' : 'bad'}>{Math.round(att[c.id] / c.capacity * 100)} %</Pill>}
+                        <label className="inline right">Présents <input type="number" min="0" style={{ width: 70 }} value={pres[c.id] ?? att[c.id] ?? ''} onChange={(e) => setPres({ ...pres, [c.id]: e.target.value })} /> / {c.capacity}</label>
+                      </div>
+                    ))}
+                  </div>
+                  {D <= t ? <div className="row end"><button className="btn small">Enregistrer la fréquentation</button></div> : <p className="sub">La fréquentation se saisit le jour même ou après.</p>}
+                </form>
+              </details>
             )}
           </div>
 

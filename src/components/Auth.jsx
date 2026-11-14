@@ -9,7 +9,7 @@ const MSG = {
 const tr = (m) => MSG[m] || m
 
 export default function Auth({ recovery, onRecovered }) {
-  const [mode, setMode] = useState(recovery ? 'newpass' : 'login')
+  const [mode, setMode] = useState(recovery ? 'newpass' : localStorage.getItem('socle-join') ? 'signup' : 'login')
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
   const [name, setName] = useState('')
@@ -17,6 +17,7 @@ export default function Auth({ recovery, onRecovered }) {
   const [err, setErr] = useState('')
   const [info, setInfo] = useState('')
   const invited = !!localStorage.getItem('socle-invite')
+  const joining = !!localStorage.getItem('socle-join')
 
   async function submit(e) {
     e.preventDefault()
@@ -56,6 +57,7 @@ export default function Auth({ recovery, onRecovered }) {
       <div className="authcard">
         <div className="brand dark"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
         <h1>{titles[mode]}</h1>
+        {joining && mode !== 'newpass' && <p className="notice">Bienvenue ! Crée ton compte pour réserver tes cours, ou connecte-toi si tu en as déjà un.</p>}
         {invited && mode !== 'newpass' && <p className="notice">Tu as été invité dans une salle. Crée ton compte avec l'adresse e-mail qui a reçu l'invitation, ou connecte-toi.</p>}
         <form onSubmit={submit} className="stack">
           {mode === 'signup' && <label>Prénom et nom<input value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" /></label>}

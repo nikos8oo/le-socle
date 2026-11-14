@@ -242,3 +242,38 @@ input[type=email],input[type=password],input:not([type]){background:var(--bg);bo
 .boxrow:hover{border-color:var(--accent)}
 a.btn{text-decoration:none;display:inline-block}
 @media (max-width:560px){.hide-s{display:none}}
+
+/* ===== Réservations ===== */
+.daystrip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.daystrip::-webkit-scrollbar{display:none}
+.daybtn{all:unset;box-sizing:border-box;cursor:pointer;min-width:56px;padding:8px 6px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.daybtn small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.daybtn b{font-family:var(--display);font-size:22px;line-height:1}
+.daybtn.on{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.daybtn.on small{color:var(--surface);opacity:.8}
+.daybtn .dot{position:absolute;top:6px;right:8px;width:7px;height:7px;border-radius:99px;background:var(--sand)}
+.daybtn:focus-visible{outline:2px solid var(--accent)}
+.slot{display:grid;grid-template-columns:92px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.list > .slot:first-child,.list > div:first-child > .slot{border-top:0}
+.slot.mine{background:linear-gradient(90deg,var(--good-soft),transparent 60%);border-radius:10px;padding-left:8px}
+.slot-time{display:flex;flex-direction:column;gap:4px}
+.slot-time b{font-family:var(--display);font-size:24px;line-height:1}
+.slot-info{display:flex;flex-direction:column;gap:6px;min-width:0}
+.places{font-size:13px;font-weight:600;color:var(--good)}
+.places.few{color:var(--warn)}.places.full{color:var(--bad)}
+.track.small{height:6px;max-width:220px}
+.slot-act .btn{min-width:110px}
+.roll{border-top:1px solid var(--line);padding:4px 0}
+.list > .roll:first-child{border-top:0}
+.roll > summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0}
+.roll > summary::-webkit-details-marker{display:none}
+.roll > summary::after{content:'▾';color:var(--muted);font-size:12px}
+.roll[open] > summary::after{content:'▴'}
+.roll .list{padding:0 0 8px 8px}
+.manual{border-top:1px dashed var(--line);padding-top:10px}
+.manual > summary{cursor:pointer}
+.linkbox{background:var(--bg);border:1px dashed var(--sage);border-radius:10px;padding:10px 12px;overflow-x:auto}
+.linkbox code{font-size:13px;white-space:nowrap}
+input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+@media (max-width:560px){.slot{grid-template-columns:70px 1fr;}.slot-act{grid-column:1/-1}.slot-act .btn{width:100%}}
+.slot-info .pill{align-self:flex-start}

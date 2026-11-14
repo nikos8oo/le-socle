@@ -24,13 +24,13 @@ export default function BoxPicker({ boxes, onPick, onCreated, onSignOut, isAdmin
           <div className="list">
             {boxes.map((b) => (
               <button key={b.id} className="boxrow" onClick={() => onPick(b.id)}>
-                <b>{b.name}</b><span className="sub">{b.myRole === 'owner' ? 'Owner' : b.myRole === 'coach' ? 'Coach' : 'Admin plateforme'}</span>
+                <b>{b.name}</b><span className="sub">{b.myRole === 'owner' ? 'Owner' : b.myRole === 'coach' ? 'Coach' : b.myRole === 'adherent' ? 'Adhérent' : 'Admin plateforme'}</span>
               </button>
             ))}
           </div>
         </>}
         <h1 style={{ marginTop: boxes.length ? 18 : 0 }}>{boxes.length ? 'Ou créer une nouvelle salle' : 'Créer ta salle'}</h1>
-        {!boxes.length && <p className="sub">Tu es coach ? Ouvre le lien d'invitation envoyé par ton owner. Tu es owner ? Crée ta salle ci-dessous.</p>}
+        {!boxes.length && <p className="sub">Tu es adhérent ou coach ? Ouvre le lien envoyé par ta salle. Tu es owner ? Crée ta salle ci-dessous.</p>}
         <form onSubmit={create} className="row">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom de la box, ex. CrossFit Canet" required style={{ flex: 1 }} aria-label="Nom de la box" />
           <button className="btn" disabled={busy}>Créer</button>

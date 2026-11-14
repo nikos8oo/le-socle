@@ -7,7 +7,7 @@ import { addDays, today } from './dates'
 // à l'owner reviennent simplement vides pour lui.
 const TABLES = {
   coaches: (q) => q.order('created_at'),
-  members_box: null,
+  members: (q) => q.order('name'),
   course_types: (q) => q,
   courses: (q) => q.order('weekday').order('start_time'),
   trials: (q) => q.order('day', { ascending: false }).limit(500),

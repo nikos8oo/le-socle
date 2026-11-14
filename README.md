@@ -35,7 +35,18 @@ Pour te donner l'accès à toutes les salles (admin plateforme), ajoute ton iden
 
 Le schéma, les fonctions et les règles d'accès (RLS) sont dans `supabase/migrations/`. Les règles sont appliquées par la base elle-même : un coach ne peut pas lire les finances, la fréquentation, les observations ni les essais des autres, même en contournant l'interface.
 
+## Réservations (étape 1)
+
+- L'owner partage le lien d'inscription de sa salle (onglet **Adhérents**). L'adhérent crée son compte et réserve ses cours depuis son téléphone : places restantes, liste d'attente, annulation.
+- Quand une place se libère, le premier de la liste d'attente monte automatiquement.
+- L'owner règle l'ouverture des réservations (jours à l'avance) et le délai d'annulation sans pénalité ; une annulation plus tardive est comptée comme « annulé tard ».
+- Dans **Aujourd'hui**, chaque cours affiche les inscrits en direct ; l'owner ou le coach fait l'appel (présent / absent, ou venu sans réserver). La fréquentation et la dernière venue de l'adhérent se mettent à jour toutes seules.
+- Un adhérent ne voit que le planning, les places et ses propres réservations : jamais les autres adhérents, l'équipe ni les chiffres.
+
 ## Feuille de route
 
 - Version pilote : Aujourd'hui, Planning, Séances d'essai, Événements, Équipe, Ressources.
+- Étape 1 (fait) : réservations des adhérents, liste d'attente, appel en direct.
+- Étape 2 : abonnements et paiements (Stripe, prélèvements SEPA), compteurs de séances.
+- Étape 3 : aide à la migration depuis Deciplus, abonnement Le Socle pour les salles.
 - Ensuite : suivi des nouveaux adhérents (60 jours), simulateur LTV, réunion d'équipe, document d'onboarding coach en PDF, rappels par e-mail, abonnement Stripe.
