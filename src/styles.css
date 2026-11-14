@@ -291,3 +291,20 @@ input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
 .wfill{font-weight:600;font-variant-numeric:tabular-nums;border-radius:6px;padding:0 6px}
 .wfill.good{background:var(--good-soft);color:var(--good)}.wfill.warn{background:var(--warn-soft);color:var(--warn)}
 .wfill.low{background:var(--bad-soft);color:var(--bad)}.wfill.none{color:var(--muted)}
+
+/* ===== Formules ===== */
+.sep{border-top:1px solid var(--line);padding-top:12px}
+.plangrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.plancard{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg);display:flex;flex-direction:column;gap:6px}
+.plancard > .btn{margin-top:auto;align-self:flex-start}
+.plancard > .row{margin-top:auto}
+.pname{font-size:17px}
+.pprice{font-family:var(--display);font-size:28px;font-weight:700;line-height:1.1;color:var(--accent)}
+.preview{display:flex;flex-direction:column;gap:4px;background:var(--accent-soft);border-radius:12px;padding:12px 14px}
+label.chip{border:1px solid var(--line);border-radius:99px;padding:4px 10px;color:var(--ink)}
+.subchips{display:flex;gap:8px;flex-wrap:wrap}
+.subchip{background:var(--good-soft);color:var(--good);border-radius:99px;padding:5px 12px;font-size:13px}
+.subchip.wait{background:var(--warn-soft);color:var(--warn)}
+.overlay{z-index:40;padding-top:90px}
+.sub{color:var(--muted);font-size:13px}
+p.sub{margin:0}

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { JOURS, addDays, fmt, hhmm, parse, today, wdOf } from '../lib/dates'
+import { JOURS, addDays, fmt, fmtShort, hhmm, parse, today, wdOf } from '../lib/dates'
 import { Empty, Pill, TypeTag } from '../components/ui'
+import { STATUS, priceText, ruleText, usageText } from '../lib/plans'
 
 const LBL = { reserve: 'Réservé', attente: "En liste d'attente", present: 'Présent', absent: 'Absent', annule: 'Annulé', annule_tard: 'Annulé tard' }
 
@@ -15,6 +16,8 @@ export default function Athlete({ box, tab, toast }) {
   const [busy, setBusy] = useState(null)
   const [me, setMe] = useState(null)
   const [history, setHistory] = useState([])
+  const [subs, setSubs] = useState([])
+  const [shop, setShop] = useState([])
 
   const load = useCallback(async () => {
     const [{ data, error }, { data: ty }, { data: mem }] = await Promise.all([
@@ -26,11 +29,19 @@ export default function Athlete({ box, tab, toast }) {
     setRows(data || [])
     setTypes(ty || [])
     setMe(mem || null)
+    const { data: pl } = await supabase.from('plans').select('*').eq('box_id', box.id).order('sort').order('created_at')
+    setShop(pl || [])
     if (mem) {
       const { data: h } = await supabase.from('bookings').select('id, day, status, course_id').eq('member_id', mem.id).lt('day', t).order('day', { ascending: false }).limit(30)
       setHistory(h || [])
     }
   }, [box.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadSubs = useCallback(async () => {
+    const { data } = await supabase.rpc('subscription_usage', { p_box: box.id, p_day: day })
+    setSubs(data || [])
+  }, [box.id, day])
+  useEffect(() => { loadSubs() }, [loadSubs, rows])
 
   useEffect(() => {
     load()
@@ -62,7 +73,56 @@ export default function Athlete({ box, tab, toast }) {
     load()
   }
 
+  async function buy(p) {
+    if (!window.confirm('Choisir « ' + p.name + ' » (' + priceText(p) + ') ? Tu règles à la salle, et ta formule est activée dès que le paiement est reçu.')) return
+    const { error } = await supabase.rpc('request_plan', { p_plan: p.id })
+    if (error) return toast(error.message)
+    toast('Demande envoyée à la salle')
+    loadSubs()
+  }
+
   if (!rows) return <div className="loading">Chargement du planning…</div>
+  const current = subs.filter((u) => u.status === 'active' || u.status === 'attente_paiement')
+  const MySubs = ({ title }) => (
+    <div className="card">
+      <h2>{title}</h2>
+      <div className="list">
+        {current.map((u) => (
+          <div className="prow" key={u.id}>
+            <div style={{ flex: 1 }}><b>{u.name}</b><div className="sub">{usageText(u)}{u.end_date ? ' · jusqu’au ' + fmt(u.end_date) : ''}</div></div>
+            <Pill cls={STATUS[u.status][0]}>{STATUS[u.status][1]}</Pill>
+          </div>
+        ))}
+        {!current.length && <Empty>Aucune formule active. Choisis-en une dans la Boutique pour réserver.</Empty>}
+      </div>
+    </div>
+  )
+
+  if (tab === 'shop') {
+    const forSale = shop.filter((p) => p.active && p.for_sale)
+    return (
+      <div className="stack">
+        <MySubs title="Ma formule" />
+        <div className="card">
+          <h2>Boutique</h2>
+          <p className="sub">Choisis ta formule. Pour l'instant, le paiement se fait à la salle : ta formule s'active dès que l'équipe a reçu ton règlement. Le paiement en ligne arrive bientôt.</p>
+          <div className="plangrid">
+            {forSale.map((p) => { const pend = subs.some((u) => u.plan_id === p.id && u.status === 'attente_paiement'); return (
+              <div className="plancard" key={p.id}>
+                <b className="pname">{p.name}</b>
+                <span className="pprice">{priceText(p)}</span>
+                <span className="sub">{ruleText(p)}{p.commitment_months ? ' · engagement ' + p.commitment_months + ' mois' : ''}</span>
+                {p.course_types && <span className="sub">Cours : {p.course_types.join(', ')}</span>}
+                {p.description && <span>{p.description}</span>}
+                <button className="btn" disabled={pend} onClick={() => buy(p)}>{pend ? 'Demande envoyée' : 'Choisir'}</button>
+              </div>
+            ) })}
+            {!forSale.length && <Empty>La salle n'a pas encore mis de formule en ligne.</Empty>}
+          </div>
+        </div>
+      </div>
+    )
+  }
   const active = me ? me.active : true
   const mine = rows.filter((r) => r.my_status === 'reserve' || r.my_status === 'attente')
 
@@ -92,6 +152,7 @@ export default function Athlete({ box, tab, toast }) {
   if (tab === 'mine') {
     return (
       <div className="stack">
+        <MySubs title="Ma formule" />
         <div className="card">
           <h2>Mes prochains cours</h2>
           <div className="list">
@@ -116,6 +177,8 @@ export default function Athlete({ box, tab, toast }) {
     <div className="stack">
       {!active && <p className="notice">Ton compte est suspendu : contacte la salle pour réserver.</p>}
       {!rules.enabled && <p className="notice">Les réservations en ligne sont fermées pour le moment.</p>}
+      {current.length > 0 ? <div className="subchips">{current.map((u) => <span key={u.id} className={'subchip' + (u.status === 'attente_paiement' ? ' wait' : '')}><b>{u.name}</b> {usageText(u)}{u.kind === 'hebdo' ? ' (semaine du ' + fmtShort(weekStart(day)) + ')' : ''}</span>)}</div>
+        : shop.some((p) => p.active) && <p className="notice">Tu n'as pas encore de formule : choisis-en une dans la Boutique pour pouvoir réserver.</p>}
       <div className="daystrip" role="tablist" aria-label="Jour">
         {days.map((d) => { const n = rows.filter((r) => r.day === d && r.my_status === 'reserve').length; return (
           <button key={d} role="tab" aria-selected={d === day} className={'daybtn' + (d === day ? ' on' : '')} onClick={() => setDay(d)}>
@@ -139,3 +202,5 @@ function d2(d, t) {
   if (d === addDays(t, 1)) return 'Demain'
   return JOURS[wdOf(d)] + ' ' + fmt(d)
 }
+
+function weekStart(d) { return addDays(d, -wdOf(d)) }

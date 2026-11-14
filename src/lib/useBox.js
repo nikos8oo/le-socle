@@ -8,6 +8,7 @@ import { addDays, today } from './dates'
 const TABLES = {
   coaches: (q) => q.order('created_at'),
   members: (q) => q.order('name'),
+  plans: (q) => q.order('sort').order('created_at'),
   course_types: (q) => q,
   courses: (q) => q.order('weekday').order('start_time'),
   trials: (q) => q.order('day', { ascending: false }).limit(500),

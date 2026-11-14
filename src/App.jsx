@@ -12,9 +12,10 @@ import Team from './views/Team'
 import Resources from './views/Resources'
 import Athlete from './views/Athlete'
 import Members from './views/Members'
+import Plans from './views/Plans'
 
-const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
-const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations']]
+const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['plans', 'Formules'], ['trials', "Séances d'essai"], ['events', 'Événements'], ['team', 'Équipe'], ['resources', 'Ressources']]
+const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations'], ['shop', 'Boutique']]
 const COACH_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['trials', 'Mes essais'], ['events', 'Événements'], ['resources', 'Ressources']]
 
 export default function App() {
@@ -160,6 +161,7 @@ export default function App() {
             {current === 'today' && <Today {...ctx} goTo={setTab} />}
             {current === 'planning' && <Planning {...ctx} />}
             {current === 'members' && <Members {...ctx} onBoxChange={loadBoxes} />}
+            {current === 'plans' && <Plans {...ctx} />}
             {current === 'trials' && <Trials {...ctx} />}
             {current === 'events' && <Events {...ctx} />}
             {current === 'team' && <Team {...ctx} />}
