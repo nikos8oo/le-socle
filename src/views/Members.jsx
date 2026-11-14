@@ -41,7 +41,9 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
   }
   async function saveRules(e) {
     e.preventDefault()
-    const booking = { enabled: !!rules.enabled, require_plan: rules.require_plan !== false, open_days: Math.max(1, Math.min(30, Number(rules.open_days) || 7)), cancel_hours: Math.max(0, Math.min(48, Number(rules.cancel_hours) || 0)) }
+    const booking = { enabled: !!rules.enabled, require_plan: rules.require_plan !== false,
+      trial_sessions: Math.max(0, Math.min(5, Number(rules.trial_sessions ?? 1))),
+      trial_course_types: rules.trial_course_types && rules.trial_course_types.length ? rules.trial_course_types : null, open_days: Math.max(1, Math.min(30, Number(rules.open_days) || 7)), cancel_hours: Math.max(0, Math.min(48, Number(rules.cancel_hours) || 0)) }
     const { error } = await supabase.from('boxes').update({ settings: { ...(box.settings || {}), booking } }).eq('id', box.id)
     if (error) return toast(error.message)
     await log('Règles de réservation mises à jour')
@@ -91,6 +93,23 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
             <label className="full inline"><input type="checkbox" checked={rules.require_plan !== false} onChange={(e) => setRules({ ...rules, require_plan: e.target.checked })} /> Réserver demande une formule active (dès que tu as créé des formules)</label>
             <label>Ouverture (jours avant le cours)<input type="number" min="1" max="30" value={rules.open_days} onChange={(e) => setRules({ ...rules, open_days: e.target.value })} /></label>
             <label>Annulation sans pénalité (heures avant)<input type="number" min="0" max="48" value={rules.cancel_hours} onChange={(e) => setRules({ ...rules, cancel_hours: e.target.value })} /></label>
+            <div className="full sep">
+              <p className="phase" style={{ marginTop: 0 }}>Séances d'essai offertes</p>
+              <p className="sub">Tout nouvel inscrit sans formule peut réserver gratuitement ses premières séances. Elles apparaissent dans « Séances d'essai ».</p>
+              <div className="row" style={{ marginTop: 8 }}>
+                <div className="seg">{[0, 1, 2, 3].map((n) => <button type="button" key={n} className="rper" aria-pressed={Number(rules.trial_sessions ?? 1) === n} onClick={() => setRules({ ...rules, trial_sessions: n })}>{n === 0 ? 'Aucune' : n + ' séance' + (n > 1 ? 's' : '')}</button>)}</div>
+              </div>
+              {Number(rules.trial_sessions ?? 1) > 0 && data.course_types.length > 0 && <>
+                <p className="sub" style={{ marginTop: 10 }}>Cours ouverts à l'essai</p>
+                <div className="row">
+                  <label className="inline chip"><input type="checkbox" checked={!(rules.trial_course_types || []).length} onChange={() => setRules({ ...rules, trial_course_types: (rules.trial_course_types || []).length ? [] : data.course_types.filter((t) => !/sp[ée]/i.test(t.name)).map((t) => t.name).slice(0, Math.max(1, data.course_types.length - 1)) })} />Tous les cours</label>
+                  {data.course_types.map((t) => { const on = (rules.trial_course_types || []).includes(t.name); return (
+                    <label className="inline chip" key={t.name}><input type="checkbox" checked={on} onChange={() => setRules({ ...rules, trial_course_types: on ? rules.trial_course_types.filter((x) => x !== t.name) : [...(rules.trial_course_types || []), t.name] })} />{t.name}</label>
+                  ) })}
+                </div>
+                <p className="sub">{(rules.trial_course_types || []).length ? 'Essai possible seulement sur : ' + rules.trial_course_types.join(', ') : 'Essai possible sur tous les cours.'}</p>
+              </>}
+            </div>
             <div className="row full end"><button className="btn small">Enregistrer</button></div>
           </form>
         </div>

@@ -35,6 +35,12 @@ export default function Trials({ box, role, data, reload, toast, log, myCoach })
     if (error) return toast(error.message)
     reload()
   }
+  async function setCoach(id, coach_id) {
+    if (!coach_id) return
+    const { error } = await supabase.from('trials').update({ coach_id }).eq('id', id)
+    if (error) return toast(error.message)
+    reload()
+  }
   async function del(id) {
     const { error } = await supabase.from('trials').delete().eq('id', id)
     if (error) return toast(error.message)
@@ -76,7 +82,8 @@ export default function Trials({ box, role, data, reload, toast, log, myCoach })
           <div className="list">
             {list.slice(0, 12).map((e) => (
               <div className="prow" key={e.id}>
-                <div style={{ minWidth: 120 }}><b>{e.prospect || 'Prospect'}</b><div className="sub">{fmt(e.day)} · {whoName(e.coach_id, data.coaches)}</div></div>
+                <div style={{ minWidth: 120 }}><b>{e.prospect || 'Prospect'}</b> {e.booking_id && <Pill cls="neutral">Réservé dans l'app</Pill>}
+                  <div className="sub">{fmt(e.day)} · {role === 'owner' && !e.coach_id ? <select value="" onChange={(ev) => setCoach(e.id, ev.target.value)} aria-label="Coach du cours"><option value="">Quel coach ?</option>{data.coaches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select> : whoName(e.coach_id, data.coaches)}</div></div>
                 <div className="seg right">{[['att', 'En attente'], ['oui', 'Inscrit'], ['non', 'Pas inscrit']].map(([k, l]) => <button key={k} className={'r' + k} aria-pressed={e.result === k} onClick={() => setResult(e.id, k)}>{l}</button>)}</div>
                 {role === 'owner' && <button className="btn small ghost" onClick={() => del(e.id)} aria-label="Supprimer">×</button>}
               </div>

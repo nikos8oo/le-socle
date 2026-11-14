@@ -19,6 +19,7 @@ export default function Athlete({ box, tab, toast }) {
   const [history, setHistory] = useState([])
   const [subs, setSubs] = useState([])
   const [shop, setShop] = useState([])
+  const [trial, setTrial] = useState(null)
 
   const load = useCallback(async () => {
     const [{ data, error }, { data: ty }, { data: mem }] = await Promise.all([
@@ -39,8 +40,12 @@ export default function Athlete({ box, tab, toast }) {
   }, [box.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadSubs = useCallback(async () => {
-    const { data } = await supabase.rpc('subscription_usage', { p_box: box.id, p_day: day })
+    const [{ data }, { data: tr }] = await Promise.all([
+      supabase.rpc('subscription_usage', { p_box: box.id, p_day: day }),
+      supabase.rpc('my_trial', { p_box: box.id }),
+    ])
     setSubs(data || [])
+    setTrial(tr && tr[0] ? tr[0] : null)
   }, [box.id, day])
   useEffect(() => { loadSubs() }, [loadSubs, rows])
   useEffect(() => {
@@ -202,7 +207,8 @@ export default function Athlete({ box, tab, toast }) {
       {!active && <p className="notice">Ton compte est suspendu : contacte la salle pour réserver.</p>}
       {!rules.enabled && <p className="notice">Les réservations en ligne sont fermées pour le moment.</p>}
       {current.length > 0 ? <div className="subchips">{current.map((u) => <span key={u.id} className={'subchip' + (u.status === 'attente_paiement' ? ' wait' : '')}><b>{u.name}</b> {usageText(u)}{u.kind === 'hebdo' ? ' (semaine du ' + fmtShort(weekStart(day)) + ')' : ''}</span>)}</div>
-        : shop.some((p) => p.active) && <p className="notice">Tu n'as pas encore de formule : choisis-en une dans la Boutique pour pouvoir réserver.</p>}
+        : trial && trial.eligible && trial.used < trial.allowed && shop.some((p) => p.active) ? <div className="subchips"><span className="subchip trialchip"><b>Bienvenue !</b> {trial.allowed - trial.used === 1 ? 'Ta séance d’essai est offerte' : (trial.allowed - trial.used) + ' séances d’essai offertes'} : réserve un cours{trial.types ? ' (' + trial.types.join(', ') + ')' : ''}.</span></div>
+        : shop.some((p) => p.active) && <p className="notice">{trial && trial.eligible && trial.allowed > 0 ? 'Tu as profité de ta séance d’essai : choisis une formule dans la Boutique pour continuer.' : 'Tu n’as pas encore de formule : choisis-en une dans la Boutique pour pouvoir réserver.'}</p>}
       <div className="daystrip" role="tablist" aria-label="Jour">
         {days.map((d) => { const n = rows.filter((r) => r.day === d && r.my_status === 'reserve').length; return (
           <button key={d} role="tab" aria-selected={d === day} className={'daybtn' + (d === day ? ' on' : '')} onClick={() => setDay(d)}>

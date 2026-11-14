@@ -7,7 +7,7 @@ import { Pill, TypeTag } from './ui'
 export function useDayBookings(boxId, day) {
   const [rows, setRows] = useState([])
   const load = useCallback(async () => {
-    const { data } = await supabase.from('bookings').select('id, course_id, member_id, status, created_at').eq('box_id', boxId).eq('day', day).order('created_at')
+    const { data } = await supabase.from('bookings').select('id, course_id, member_id, status, created_at, is_trial').eq('box_id', boxId).eq('day', day).order('created_at')
     setRows(data || [])
   }, [boxId, day])
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function Roll({ course, day, rows, members, types, canRoll, onCha
       <div className="list">
         {booked.map((r) => (
           <div className="prow" key={r.id}>
-            <span style={{ flex: 1 }}>{name(r.member_id)}</span>
+            <span style={{ flex: 1 }}>{name(r.member_id)} {r.is_trial && <Pill cls="warn">Essai</Pill>}</span>
             {canRoll ? (
               <div className="seg">
                 <button className="roui" aria-pressed={r.status === 'present'} onClick={() => mark(r, 'present')}>Présent</button>
