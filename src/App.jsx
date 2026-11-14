@@ -27,6 +27,8 @@ export default function App() {
   const [tab, setTab] = useState('today')
   const [menu, setMenu] = useState(false)
   const [joinClash, setJoinClash] = useState(null)
+  const [space, setSpaceRaw] = useState(() => localStorage.getItem('socle-space') || '')
+  const setSpace = (v) => { setSpaceRaw(v); if (v) localStorage.setItem('socle-space', v); else localStorage.removeItem('socle-space') }
   const [theme, setTheme] = useState(() => localStorage.getItem('socle-theme') || '')
   const [toast, toastNode] = useToast()
 
@@ -35,8 +37,8 @@ export default function App() {
     const p = new URLSearchParams(window.location.search)
     const inv = p.get('invite')
     const join = p.get('rejoindre')
-    if (inv) localStorage.setItem('socle-invite', inv)
-    if (join) localStorage.setItem('socle-join', join)
+    if (inv) { localStorage.setItem('socle-invite', inv); localStorage.setItem('socle-space', 'salle'); setSpaceRaw('salle') }
+    if (join) { localStorage.setItem('socle-join', join); localStorage.setItem('socle-space', 'athlete'); setSpaceRaw('athlete') }
     if (inv || join) window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
@@ -89,17 +91,25 @@ export default function App() {
       return { ...b, myRole: m ? m.role : 'admin', myCoach: m ? m.coach_id : null }
     })
     setBoxes(list)
-    if (list.length === 1 && !list.some((b) => b.id === boxId)) setBoxId(list[0].id)
+    let sp = localStorage.getItem('socle-space') || ''
+    if (!sp) { sp = list.some((b) => b.myRole !== 'adherent') || (adm && adm.length) ? 'salle' : 'athlete'; setSpace(sp) }
+    const inSpace = list.filter((b) => (sp === 'athlete' ? b.myRole === 'adherent' : b.myRole !== 'adherent'))
+    if (inSpace.length === 1 && !inSpace.some((b) => b.id === boxId)) setBoxId(inSpace[0].id)
   }, [session]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { loadBoxes() }, [loadBoxes])
 
-  const box = useMemo(() => (boxes || []).find((b) => b.id === boxId) || null, [boxes, boxId])
+  const spaceBoxes = useMemo(() => (boxes || []).filter((b) => (space === 'athlete' ? b.myRole === 'adherent' : b.myRole !== 'adherent')), [boxes, space])
+  const box = useMemo(() => spaceBoxes.find((b) => b.id === boxId) || null, [spaceBoxes, boxId])
+  const otherSpace = space === 'athlete' ? 'salle' : 'athlete'
+  const hasOther = (boxes || []).some((b) => (otherSpace === 'athlete' ? b.myRole === 'adherent' : b.myRole !== 'adherent')) || (otherSpace === 'salle' && isAdmin)
+  function switchSpace() { setSpace(otherSpace); setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false); setTab('') }
   const role = box ? (box.myRole === 'coach' ? 'coach' : box.myRole === 'adherent' ? 'adherent' : 'owner') : null
   const { data, error, reload, log } = useBox(box && role !== 'adherent' ? box.id : null)
 
   if (session === undefined) return <div className="loading">Chargement…</div>
-  if (!session || recovery) return <Auth recovery={recovery} onRecovered={() => { setRecovery(false); toast('Mot de passe mis à jour') }} />
+  if (!session || recovery) return <Auth recovery={recovery} space={space} setSpace={setSpace} onRecovered={() => { setRecovery(false); toast('Mot de passe mis à jour') }} />
+  if (!space) return <div className="loading">Chargement…</div>
   if (!boxes) return <div className="loading">Chargement de tes salles…</div>
   if (joinClash) {
     return (
@@ -116,7 +126,7 @@ export default function App() {
     )
   }
   if (!box) {
-    return <BoxPicker boxes={boxes} isAdmin={isAdmin} onPick={(id) => { setBoxId(id); localStorage.setItem('socle-box', id) }}
+    return <BoxPicker boxes={spaceBoxes} space={space} isAdmin={isAdmin} hasOther={hasOther} onSwitch={switchSpace} onPick={(id) => { setBoxId(id); localStorage.setItem('socle-box', id) }}
       onCreated={async (id) => { setBoxId(id); localStorage.setItem('socle-box', id); await loadBoxes() }}
       onSignOut={() => supabase.auth.signOut()} />
   }
@@ -124,7 +134,7 @@ export default function App() {
   const tabs = role === 'owner' ? OWNER_TABS : role === 'adherent' ? ATH_TABS : COACH_TABS
   const current = tabs.some((t) => t[0] === tab) ? tab : tabs[0][0]
   const me = data ? data.coaches.find((c) => c.id === box.myCoach) : null
-  const ctx = { box, role, data, reload, log, toast, session, myCoach: box.myCoach, me }
+  const ctx = { box, role, data, reload, log, toast, session, myCoach: box.myCoach, me, isAdmin }
   const effDark = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
@@ -144,9 +154,10 @@ export default function App() {
               {menu && (
                 <div className="menupanel" onMouseLeave={() => setMenu(false)}>
                   <div className="sub" style={{ padding: '4px 8px' }}>{session.user.email}</div>
-                  {boxes.length > 1 && boxes.map((b) => <button key={b.id} onClick={() => { setBoxId(b.id); localStorage.setItem('socle-box', b.id); setMenu(false) }}>{b.id === box.id ? '✓ ' : ''}{b.name}</button>)}
-                  <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>Rejoindre ou changer de salle</button>
-                  <button onClick={() => supabase.auth.signOut()}>Se déconnecter</button>
+                  {spaceBoxes.length > 1 && spaceBoxes.map((b) => <button key={b.id} onClick={() => { setBoxId(b.id); localStorage.setItem('socle-box', b.id); setMenu(false) }}>{b.id === box.id ? '✓ ' : ''}{b.name}</button>)}
+                  <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>{space === 'athlete' ? 'Rejoindre ou changer de salle' : 'Changer de salle'}</button>
+                  {hasOther && <button onClick={switchSpace}>{otherSpace === 'athlete' ? 'Passer à mon espace athlète' : 'Passer à l’espace salle'}</button>}
+                  <button onClick={() => { localStorage.removeItem('socle-box'); supabase.auth.signOut() }}>Se déconnecter</button>
                 </div>
               )}
             </div>

@@ -6,7 +6,7 @@ import { Empty, Modal, Pill } from '../components/ui'
 
 const ROLES = ['Head coach', 'Coach', 'Stagiaire']
 
-export default function Team({ box, data, reload, toast, log, session }) {
+export default function Team({ box, data, reload, toast, log, session, isAdmin }) {
   const t = today()
   const [edit, setEdit] = useState(null)
   const [obsFor, setObsFor] = useState(null)
@@ -75,7 +75,8 @@ export default function Team({ box, data, reload, toast, log, session }) {
 
       <div className="grid g2 top">
         <div className="card">
-          <h3>Inviter dans l'app</h3>
+          <h3>Accès à l'app</h3>
+          {isAdmin ? <>
           <p className="sub">Crée l'invitation, le lien est copié : envoie-le par message. Le coach crée son compte avec cet e-mail et arrive directement dans ta salle, sans accès aux chiffres.</p>
           <form className="form" onSubmit={invite}>
             <label>E-mail<input type="email" required value={inv.email} onChange={(e) => setInv({ ...inv, email: e.target.value })} /></label>
@@ -83,9 +84,10 @@ export default function Team({ box, data, reload, toast, log, session }) {
             {inv.role === 'coach' && <label className="full">Fiche coach<select value={inv.coach_id} onChange={(e) => setInv({ ...inv, coach_id: e.target.value })}><option value="">Choisir…</option>{data.coaches.filter((c) => !linked(c.id)).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
             <div className="row full end"><button className="btn">Créer et copier le lien</button></div>
           </form>
+          </> : <p className="sub">Les accès owner et coach sont délivrés par Drill's &amp; Skills. Crée la fiche du coach ci-dessus, puis demande son invitation : il la recevra par e-mail et arrivera directement dans ta salle, sans accès aux chiffres.</p>}
           {pending.length > 0 && <>
             <p className="phase">En attente</p>
-            {pending.map((i) => <div className="prow" key={i.id}><div style={{ flex: 1 }}><b>{i.email}</b><div className="sub">{i.role === 'owner' ? 'Owner' : 'Coach'} · {fmt(i.created_at.slice(0, 10))}</div></div><button className="btn small ghost" onClick={() => copy(i)}>Copier le lien</button><button className="btn small ghost" onClick={() => revoke(i)}>Annuler</button></div>)}
+            {pending.map((i) => <div className="prow" key={i.id}><div style={{ flex: 1 }}><b>{i.email}</b><div className="sub">{i.role === 'owner' ? 'Owner' : 'Coach'} · {fmt(i.created_at.slice(0, 10))}</div></div>{isAdmin && <><button className="btn small ghost" onClick={() => copy(i)}>Copier le lien</button><button className="btn small ghost" onClick={() => revoke(i)}>Annuler</button></>}</div>)}
           </>}
         </div>
         <div className="card">

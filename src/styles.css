@@ -308,3 +308,11 @@ label.chip{border:1px solid var(--line);border-radius:99px;padding:4px 10px;colo
 .overlay{z-index:40;padding-top:90px}
 .sub{color:var(--muted);font-size:13px}
 p.sub{margin:0}
+.spacepick{display:grid;gap:12px}
+.spacebtn{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--bg);display:flex;flex-direction:column;gap:4px}
+.spacebtn b{font-family:var(--display);font-size:22px;text-transform:uppercase;letter-spacing:.03em;color:var(--accent)}
+.spacebtn span{font-size:13px;color:var(--muted)}
+.spacebtn:hover{border-color:var(--accent)}
+.spacebtn:focus-visible{outline:2px solid var(--accent)}
+.spaceseg{align-self:flex-start}
+.spaceseg button{padding:6px 14px;font-size:13px}

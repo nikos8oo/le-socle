@@ -25,11 +25,12 @@ npm run dev
 - **Authentication → Emails → SMTP** : brancher un vrai expéditeur (Resend, Brevo…). L'envoi par défaut de Supabase est limité à quelques e-mails par heure.
 - **Authentication → Providers → Email** : laisser « Confirm email » activé.
 
-## Premier owner
+## Deux espaces, une seule connexion
 
-L'owner crée son compte, puis « Créer une salle ». Il ajoute ses coachs dans **Équipe**, puis invite chacun par e-mail : le lien est copié, il l'envoie par message ; le coach crée son compte avec cette adresse et arrive dans la salle.
+- **Athlète** : chacun crée son compte et rejoint sa salle avec le code de la salle (ou le lien d'inscription).
+- **Espace salle** (owner et coachs) : sur invitation uniquement. Seul l'administrateur Drill's & Skills (table `platform_admins`) crée les salles et envoie les invitations owner et coach depuis l'onglet **Équipe**. L'owner crée les fiches de ses coachs et demande leur accès.
 
-Pour te donner l'accès à toutes les salles (admin plateforme), ajoute ton identifiant utilisateur dans la table `platform_admins`.
+Ouvrir une nouvelle salle : se connecter en espace salle avec le compte admin → « Créer une salle » → onglet Équipe → inviter l'owner (accès Owner) avec son e-mail → lui envoyer le lien copié.
 
 ## Base de données
 
