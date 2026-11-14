@@ -172,7 +172,7 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
             <div className="spread"><h2>Cours du jour</h2><span className="sub">{courses.length} cours</span></div>
             {!courses.length && <Empty>Pas de cours ce jour-là.</Empty>}
             <div className="list">
-              {courses.map((c) => <Roll key={c.id} course={c} day={D} rows={bk} members={data.members} types={data.course_types} canRoll={D <= t} toast={toast} onChange={() => { reloadBk(); reload() }} />)}
+              {courses.map((c) => <Roll key={c.id} course={c} day={D} rows={bk} members={data.members} types={data.course_types} canRoll={D <= t} toast={toast} onChange={() => { reloadBk(); reload() }} coaches={data.coaches} overrides={data.overrides} role={role} myCoach={myCoach} boxId={box.id} />)}
             </div>
             {role === 'owner' && courses.length > 0 && !hasBk && (
               <details className="manual">

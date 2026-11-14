@@ -92,7 +92,7 @@ export default function Planning({ box, role, data, reload, toast, log }) {
                       return (
                         <td key={d}>
                           <div className={'pslot' + (cs.length > 1 ? ' multi' : '')}>
-                            {cs.map((c) => <button key={c.id} className="pchip" style={chip(c.type_name, types)} disabled={role !== 'owner'} onClick={() => setEdit(c)}><b>{c.type_name}</b><small>{c.label ? c.label + ' · ' : ''}{c.capacity} pl.{c.test_since ? ' · test' : ''}</small></button>)}
+                            {cs.map((c) => <button key={c.id} className="pchip" style={chip(c.type_name, types)} disabled={role !== 'owner'} onClick={() => setEdit(c)}><b>{c.type_name}</b><small>{c.label ? c.label + ' · ' : ''}{c.capacity} pl.{c.test_since ? ' · test' : ''}</small>{c.coach_id && <small className="pcoach">{(data.coaches.find((x) => x.id === c.coach_id) || {}).name}</small>}</button>)}
                             {role === 'owner' && cs.length < 3 && <button className={'pchip empty' + (cs.length ? ' mini' : '')} onClick={() => setEdit({ weekday: d, start_time: h, type_name: types[0].name, capacity: 15, siblings: cs.length })} aria-label={(cs.length ? 'Ajouter un cours en même temps ' : 'Ajouter un cours ') + JOURS[d] + ' ' + h} title={cs.length ? 'Ajouter un cours en même temps' : 'Ajouter un cours'}>+</button>}
                           </div>
                         </td>
@@ -140,7 +140,7 @@ function CourseModal({ course, types, box, data, onClose, onSaved, toast }) {
   const isNew = !course.id
   const room = 3 - (course.siblings || 0)
   const [f, setF] = useState({ weekday: course.weekday, start_time: hhmm(course.start_time), test: !!course.test_since })
-  const blank = (i) => ({ type_name: i === 0 ? course.type_name : (types[i] || types[0]).name, capacity: course.capacity || 15, label: course.label || '', newType: '' })
+  const blank = (i) => ({ type_name: i === 0 ? course.type_name : (types[i] || types[0]).name, capacity: course.capacity || 15, label: course.label || '', newType: '', coach_id: i === 0 ? course.coach_id || '' : '' })
   const [rows, setRows] = useState([blank(0)])
   const setRow = (i, patch) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
   function setCount(n) {
@@ -160,7 +160,7 @@ function CourseModal({ course, types, box, data, onClose, onSaved, toast }) {
         const { error } = await supabase.from('course_types').insert({ box_id: box.id, name: type, color_index: (data.course_types.length + out.length) % PALETTE.length })
         if (error && !/duplicate/i.test(error.message)) return toast(error.message)
       }
-      out.push({ box_id: box.id, weekday: Number(f.weekday), start_time: f.start_time, type_name: type, capacity: Math.max(1, Number(r.capacity) || 1), label: r.label.trim() || null, test_since: f.test ? course.test_since || today() : null })
+      out.push({ box_id: box.id, weekday: Number(f.weekday), start_time: f.start_time, type_name: type, capacity: Math.max(1, Number(r.capacity) || 1), label: r.label.trim() || null, coach_id: r.coach_id || null, test_since: f.test ? course.test_since || today() : null })
     }
     const { error } = isNew ? await supabase.from('courses').insert(out) : await supabase.from('courses').update(out[0]).eq('id', course.id)
     if (error) return toast(/maximum 3/i.test(error.message) ? 'Maximum 3 cours sur le même créneau' : error.message)
@@ -189,6 +189,7 @@ function CourseModal({ course, types, box, data, onClose, onSaved, toast }) {
               <label>Type de cours<select value={r.type_name} onChange={(e) => setRow(i, { type_name: e.target.value })}>{types.map((t) => <option key={t.name}>{t.name}</option>)}<option value="__new">Nouveau type…</option></select></label>
               {r.type_name === '__new' && <label>Nom du nouveau type<input value={r.newType} onChange={(e) => setRow(i, { newType: e.target.value })} placeholder="Ex. : Spé gym" /></label>}
               <label>Places<input type="number" min="1" value={r.capacity} onChange={(e) => setRow(i, { capacity: e.target.value })} required /></label>
+              <label>Coach du cours<select value={r.coach_id} onChange={(e) => setRow(i, { coach_id: e.target.value })}><option value="">Pas encore attribué</option>{data.coaches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
               <label>Zone ou salle{rows.length > 1 || course.siblings ? '' : ' (facultatif)'}<input value={r.label} onChange={(e) => setRow(i, { label: e.target.value })} placeholder="Ex. : Salle 1, Zone haltéro" /></label>
             </div>
           </div>

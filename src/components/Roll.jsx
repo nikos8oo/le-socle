@@ -38,7 +38,7 @@ export function useWeekSchedule(boxId, from) {
   return rows
 }
 
-export default function Roll({ course, day, rows, members, types, canRoll, onChange, toast }) {
+export default function Roll({ course, day, rows, members, types, canRoll, onChange, toast, coaches = [], overrides = [], role, myCoach, boxId }) {
   const [walk, setWalk] = useState('')
   const name = (id) => (members.find((m) => m.id === id) || {}).name || 'Adhérent'
   const inC = rows.filter((r) => r.course_id === course.id)
@@ -47,6 +47,17 @@ export default function Roll({ course, day, rows, members, types, canRoll, onCha
   const late = inC.filter((r) => r.status === 'annule_tard')
   const present = booked.filter((r) => r.status === 'present').length
   const fill = booked.length / course.capacity
+  const ov = overrides.find((o) => o.course_id === course.id && o.day === day)
+  const coachId = ov ? ov.coach_id : course.coach_id
+  const coachName = (coaches.find((c) => c.id === coachId) || {}).name
+  async function setCoachOfDay(v) {
+    const res = v === (course.coach_id || '')
+      ? await supabase.from('course_coach_overrides').delete().eq('course_id', course.id).eq('day', day)
+      : await supabase.from('course_coach_overrides').upsert({ course_id: course.id, day, box_id: boxId, coach_id: v || null })
+    if (res.error) return toast(res.error.message)
+    toast(v === (course.coach_id || '') ? 'Coach habituel rétabli' : 'Remplacement enregistré')
+    onChange()
+  }
 
   async function mark(r, status) {
     const { error } = await supabase.rpc('mark_presence', { p_booking: r.id, p_status: r.status === status ? 'reserve' : status })
@@ -67,9 +78,19 @@ export default function Roll({ course, day, rows, members, types, canRoll, onCha
       <summary>
         <TypeTag name={course.type_name} types={types} /><b className="num">{hhmm(course.start_time)}</b>{course.label && <span className="sub">{course.label}</span>}
         <span className="sub">{booked.length}/{course.capacity} inscrits{waiting.length ? ' · ' + waiting.length + ' en attente' : ''}</span>
+        {coachName ? <span className={'coachtag' + (coachId && coachId === myCoach ? ' mine' : '')}>{coachId === myCoach ? 'Ton cours' : coachName}{ov ? ' (remplacement)' : ''}</span> : role === 'owner' && <span className="coachtag none">Coach ?</span>}
         <span className="right"><Pill cls={fill >= 0.9 ? 'warn' : fill >= 0.6 ? 'good' : 'bad'}>{Math.round(fill * 100)} %</Pill>{present > 0 && <> <Pill cls="good">{present} présent{present > 1 ? 's' : ''}</Pill></>}</span>
       </summary>
       <div className="list">
+        {role === 'owner' && (
+          <div className="prow">
+            <span className="sub" style={{ flex: 1 }}>Coach ce jour-là{course.coach_id ? '' : ' (aucun coach attitré dans le planning)'}</span>
+            <select value={coachId || ''} onChange={(e) => setCoachOfDay(e.target.value)} aria-label="Coach ce jour-là">
+              <option value="">Personne</option>
+              {coaches.map((c) => <option key={c.id} value={c.id}>{c.name}{c.id === course.coach_id ? ' (habituel)' : ''}</option>)}
+            </select>
+          </div>
+        )}
         {booked.map((r) => (
           <div className="prow" key={r.id}>
             <span style={{ flex: 1 }}>{name(r.member_id)} {r.is_trial && <Pill cls="warn">Essai</Pill>}</span>

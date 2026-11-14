@@ -162,7 +162,7 @@ export default function Athlete({ box, tab, toast }) {
     const booked = st === 'reserve' || st === 'attente'
     return (
       <div className={'slot' + (st === 'reserve' ? ' mine' : '')}>
-        <div className="slot-time"><b className="num">{hhmm(r.start_time)}</b><TypeTag name={r.type_name} types={types} />{r.label && <small className="sub">{r.label}</small>}</div>
+        <div className="slot-time"><b className="num">{hhmm(r.start_time)}</b><TypeTag name={r.type_name} types={types} />{(r.label || r.coach_name) && <small className="sub">{[r.label, r.coach_name && 'avec ' + r.coach_name].filter(Boolean).join(' · ')}</small>}</div>
         <div className="slot-info">
           {booked ? <Pill cls={st === 'reserve' ? 'good' : 'warn'}>{st === 'reserve' ? 'Réservé' : 'Liste d\'attente · ' + r.my_rank + (r.my_rank === 1 ? 'er' : 'e')}</Pill>
             : st && LBL[st] && st !== 'annule' ? <Pill>{LBL[st]}</Pill>

@@ -345,3 +345,7 @@ input[type=time]{background:var(--bg);border:1px solid var(--line);border-radius
 .gearpanel button small{font-size:12px;color:var(--muted)}
 .gearpanel button.sel{background:var(--accent-soft)}
 .crumb{font-size:13px;color:var(--muted);background:var(--sand-soft);border-radius:99px;padding:3px 10px}
+.pcoach{opacity:.9;font-weight:600}
+.coachtag{font-size:12px;font-weight:600;border-radius:99px;padding:1px 9px;background:var(--accent-soft);color:var(--accent)}
+.coachtag.mine{background:var(--sand);color:#17323A}
+.coachtag.none{background:var(--warn-soft);color:var(--warn)}

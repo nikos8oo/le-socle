@@ -48,6 +48,11 @@ export function useBox(boxId) {
       return ['box_members', rows || []]
     })())
     jobs.push((async () => {
+      const { data: rows, error: err } = await supabase.from('course_coach_overrides').select('*').eq('box_id', boxId).gte('day', addDays(today(), -100))
+      if (err) throw err
+      return ['overrides', rows || []]
+    })())
+    jobs.push((async () => {
       const { data: rows, error: err } = await supabase.from('journal').select('*').eq('box_id', boxId).gte('day', since).order('created_at', { ascending: false })
       if (err) throw err
       return ['journal', rows || []]
