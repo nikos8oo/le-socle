@@ -378,3 +378,9 @@ input[type=tel],input[type=url],input[type=search]{background:var(--bg);border:1
 .edittable input.amount{max-width:110px;text-align:right}
 .edittable td{padding:4px 6px;vertical-align:middle}
 @media (max-width:560px){.barrow{grid-template-columns:110px 1fr 70px}}
+/* Compte de résultat */
+.fintable.pl td.acc{width:44px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+.fintable td.pc{width:64px;color:var(--muted);font-size:12px}
+.fintable tr.sig td{font-weight:700;background:var(--bg);padding-left:8px;padding-right:8px}
+.fintable tr.sig td:first-child{border-radius:8px 0 0 8px}.fintable tr.sig td:last-child{border-radius:0 8px 8px 0}
+.fintable tr.total td{padding-left:8px;padding-right:8px}

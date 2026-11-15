@@ -71,3 +71,7 @@ Le schéma, les fonctions et les règles d'accès (RLS) sont dans `supabase/migr
 - Désactivé par défaut pour toute nouvelle salle (Le Socle se pose à côté du logiciel de réservation de la salle).
 - Seul le super admin l'active ou le coupe (console : colonne « Module réservations » ou fiche « Gérer »). Une salle de démo l'a toujours.
 - Coupé : pas d'onglets Formules / Paiement en ligne côté owner, pas d'espace réservation côté adhérent. En base, inscription adhérent, réservation et achat sont refusés (triggers `require_booking_module`), sauf pour l'équipe de la salle. Rien n'est supprimé.
+
+## Rentabilité (compte de résultat)
+`box_private.settings.finance` : produits et charges rattachés aux comptes du PCG (706/707/708, 606…651, 635), personnel (641/645, coachs indépendants en 611), investissements amortis (681), emprunts (intérêts 661, capital en trésorerie), régime IS (15 % jusqu'à 42 500 € puis 25 %) ou IR.
+Affichage en soldes intermédiaires de gestion (marge commerciale, CA, VA, EBE, résultat d'exploitation, RCAI, résultat net), CAF, trésorerie dégagée, TVA, point mort. Export CSV pour l'expert-comptable. Les anciennes lignes (`category`) sont converties à l'affichage. Démo : `private.demo_finance_json()`.
