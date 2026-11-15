@@ -363,3 +363,18 @@ input[type=time]{background:var(--bg);border:1px solid var(--line);border-radius
 .savebar{position:sticky;bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;box-shadow:0 8px 24px rgba(15,28,32,.25)}
 .savebar .btn{background:var(--sand);border-color:var(--sand);color:#17323A}
 input[type=tel],input[type=url],input[type=search]{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink)}
+.kpi.bad{background:var(--bad-soft)}.kpi.bad b{color:var(--bad)}
+.fintable{width:100%}
+.fintable td{padding:8px 0;border-bottom:1px solid var(--line)}
+.fintable td.num{text-align:right;white-space:nowrap}
+.fintable tr.minus td{color:var(--muted)}
+.fintable tr.total td{font-weight:700;font-size:17px;border-bottom:0;padding-top:12px}
+.bars{display:flex;flex-direction:column;gap:8px}
+.barrow{display:grid;grid-template-columns:170px 1fr 90px;gap:10px;align-items:center;font-size:13px}
+.barrow b{text-align:right}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.edittable input,.edittable select{width:100%;min-width:70px;padding:6px 8px;font-size:13px}
+.edittable input.amount{max-width:110px;text-align:right}
+.edittable td{padding:4px 6px;vertical-align:middle}
+@media (max-width:560px){.barrow{grid-template-columns:110px 1fr 70px}}

@@ -16,10 +16,11 @@ import Plans from './views/Plans'
 import AdminConsole from './views/AdminConsole'
 import Payments from './views/Payments'
 import BoxInfo from './views/BoxInfo'
+import Finance from './views/Finance'
 
 // Onglets du quotidien dans la barre ; la gestion de la salle dans la roue des réglages
 const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['trials', "Séances d'essai"], ['events', 'Événements']]
-const OWNER_SETTINGS = [['infos', 'Infos de la salle', 'Nom, logo, coordonnées, message de bienvenue'], ['plans', 'Formules et tarifs', 'Ce que tes adhérents achètent, demandes à valider'], ['payments', 'Paiement en ligne', 'Ton compte Stripe et l’encaissement par carte'], ['team', 'Équipe', 'Coachs, observations, accès'], ['resources', 'Ressources', 'Documents de la méthode, formation']]
+const OWNER_SETTINGS = [['infos', 'Infos de la salle', 'Nom, logo, coordonnées, message de bienvenue'], ['finance', 'Rentabilité', 'Charges, salaires, revenu réel par adhérent'], ['plans', 'Formules et tarifs', 'Ce que tes adhérents achètent, demandes à valider'], ['payments', 'Paiement en ligne', 'Ton compte Stripe et l’encaissement par carte'], ['team', 'Équipe', 'Coachs, observations, accès'], ['resources', 'Ressources', 'Documents de la méthode, formation']]
 const ATH_TABS = [['book', 'Réserver'], ['mine', 'Mes réservations'], ['shop', 'Boutique']]
 const COACH_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['trials', 'Mes essais'], ['events', 'Événements'], ['resources', 'Ressources']]
 
@@ -231,6 +232,7 @@ export default function App() {
             {current === 'plans' && <Plans {...ctx} goTo={setTab} />}
             {current === 'payments' && <Payments {...ctx} />}
             {current === 'infos' && <BoxInfo {...ctx} onBoxChange={loadBoxes} />}
+            {current === 'finance' && <Finance {...ctx} />}
             {current === 'trials' && <Trials {...ctx} />}
             {current === 'events' && <Events {...ctx} />}
             {current === 'team' && <Team {...ctx} />}
