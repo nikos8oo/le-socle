@@ -116,7 +116,7 @@ export default function Today({ box, role, data, reload, log, toast, myCoach, me
       </div>
       {role === 'coach' && !me && <p className="notice">Ton compte n'est pas encore relié à une fiche coach. Demande à l'owner de t'inviter depuis sa fiche.</p>}
 
-      {role === 'owner' && (pendingBuy > 0 || payIssues > 0) && (
+      {role === 'owner' && box.booking_module && (pendingBuy > 0 || payIssues > 0) && (
         <div className="notice">
           <span style={{ flex: 1 }}>{pendingBuy > 0 && <><b>{pendingBuy}</b> demande{pendingBuy > 1 ? 's' : ''} de formule à valider (paiement à la salle). </>}{payIssues > 0 && <><b>{payIssues}</b> paiement{payIssues > 1 ? 's' : ''} par carte à surveiller.</>}</span>
           <button className="btn small" onClick={() => goTo('plans')}>Voir dans Formules</button>

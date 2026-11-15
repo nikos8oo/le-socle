@@ -47,6 +47,19 @@ export default function AdminConsole({ toast, onOpen }) {
     load()
   }
 
+  async function toggleModule(r) {
+    const on = !r.booking_module
+    const msg = on
+      ? 'Activer le module réservations pour ' + r.name + ' ? Ses adhérents pourront s’inscrire avec le code salle, réserver leurs cours et acheter leurs formules (paiement en ligne si l’owner connecte Stripe).'
+      : 'Couper le module réservations pour ' + r.name + ' ? Les adhérents ne pourront plus réserver ni acheter dans Le Socle, et l’owner ne verra plus Formules et Paiement en ligne. Rien n’est supprimé : tu pourras le réactiver.'
+    if (!window.confirm(msg)) return
+    const { error } = await supabase.from('boxes').update({ booking_module: on }).eq('id', r.id)
+    if (error) return toast(error.message)
+    toast(on ? 'Module réservations activé' : 'Module réservations coupé')
+    setSel((x) => (x && x.id === r.id ? { ...x, booking_module: on } : x))
+    load()
+  }
+
   if (!rows) return <div className="loading">Chargement des salles…</div>
   const live = rows.filter((r) => (r.status === 'active' || r.status === 'pilote') && !r.is_demo)
   const list = rows.filter((r) => (st === 'tous' ? r.status !== 'archivee' : r.status === st)).filter((r) => !q || (r.name + ' ' + (r.city || '') + ' ' + (r.owners || '')).toLowerCase().includes(q.toLowerCase()))
@@ -74,7 +87,7 @@ export default function AdminConsole({ toast, onOpen }) {
           </div>
         </div>
         <div className="scroll"><table>
-          <thead><tr><th>Salle</th><th>Statut</th><th>Owner</th><th>Adhérents</th><th>Abonnés</th><th>Revenu / mois</th><th>Paiement CB</th><th>Réserv. 30 j</th><th>Activité</th><th></th></tr></thead>
+          <thead><tr><th>Salle</th><th>Statut</th><th>Owner</th><th>Adhérents</th><th>Abonnés</th><th>Revenu / mois</th><th>Module réservations</th><th>Paiement CB</th><th>Réserv. 30 j</th><th>Activité</th><th></th></tr></thead>
           <tbody>
             {list.map((r) => (
               <tr key={r.id}>
@@ -84,7 +97,8 @@ export default function AdminConsole({ toast, onOpen }) {
                 <td>{r.adherents}</td>
                 <td>{r.active_subs}</td>
                 <td>{money(r.mrr_cents)}</td>
-                <td>{r.stripe_charges_enabled ? <Pill cls="good">Actif</Pill> : r.stripe_account_id ? <Pill cls="warn">En cours</Pill> : <Pill>Non</Pill>}</td>
+                <td><button className={'pill ' + (r.booking_module ? 'good' : 'neutral')} style={{ cursor: 'pointer', border: 0 }} title={r.booking_module ? 'Cliquer pour couper' : 'Cliquer pour activer'} onClick={() => toggleModule(r)}>{r.booking_module ? 'Activé' : 'Coupé'}</button></td>
+                <td>{!r.booking_module ? <span className="sub">—</span> : r.stripe_charges_enabled ? <Pill cls="good">Actif</Pill> : r.stripe_account_id ? <Pill cls="warn">En cours</Pill> : <Pill>Non</Pill>}</td>
                 <td>{r.bookings_30}{r.bookings_30 ? <span className="sub"> · {Math.round(r.presents_30 / r.bookings_30 * 100)} % venus</span> : null}</td>
                 <td className={r.last_activity && Date.now() - new Date(r.last_activity).getTime() <= 7 * 864e5 ? '' : 'warntxt'}>{ago(r.last_activity)}</td>
                 <td><div className="row"><button className="btn small" onClick={() => onOpen(r.id)}>Ouvrir</button>{r.is_demo ? <button className="btn small ghost" onClick={() => deleteDemo(r)}>Supprimer la démo</button> : <button className="btn small ghost" onClick={() => setSel(r)}>Gérer</button>}</div></td>
@@ -96,7 +110,7 @@ export default function AdminConsole({ toast, onOpen }) {
       </div>
 
       {creating && <NewBox toast={toast} onClose={() => setCreating(false)} onDone={() => { setCreating(false); load() }} />}
-      {sel && <ManageBox box={sel} toast={toast} onClose={() => setSel(null)} onChange={load} onOpen={onOpen} />}
+      {sel && <ManageBox box={sel} toast={toast} onClose={() => setSel(null)} onChange={load} onOpen={onOpen} onToggleModule={() => toggleModule(sel)} />}
     </main>
   )
 }
@@ -144,7 +158,7 @@ function NewBox({ toast, onClose, onDone }) {
   )
 }
 
-function ManageBox({ box, toast, onClose, onChange, onOpen }) {
+function ManageBox({ box, toast, onClose, onChange, onOpen, onToggleModule }) {
   const [people, setPeople] = useState([])
   const [invites, setInvites] = useState([])
   const [coaches, setCoaches] = useState([])
@@ -208,9 +222,14 @@ function ManageBox({ box, toast, onClose, onChange, onOpen }) {
         </form>
 
         <div className="prow">
+          <div style={{ flex: 1 }}><b>Module réservations</b> <Pill cls={box.booking_module ? 'good' : 'neutral'}>{box.booking_module ? 'Activé' : 'Coupé'}</Pill><div className="sub">{box.booking_module ? 'Inscription des adhérents par code salle, réservation des cours, formules en boutique et paiement en ligne.' : 'Le Socle se pose à côté du logiciel de la salle : pilotage, équipe, essais, rentabilité. Pas de réservation ni de boutique adhérent.'}</div></div>
+          <button className={'btn small' + (box.booking_module ? ' ghost' : '')} onClick={onToggleModule}>{box.booking_module ? 'Couper' : 'Activer'}</button>
+        </div>
+
+        {box.booking_module && <div className="prow">
           <div style={{ flex: 1 }}><b>Paiement en ligne</b><div className="sub">{box.stripe_account_id ? (box.stripe_charges_enabled ? 'Actif · ' : 'Inscription Stripe en cours · ') + box.stripe_account_id : 'Pas encore connecté : l’owner le fait depuis son onglet Paiements'}</div></div>
           {box.stripe_account_id && <button className="btn small ghost" onClick={disconnectStripe}>Détacher le compte Stripe</button>}
-        </div>
+        </div>}
 
         <div>
           <p className="phase">Accès salle</p>

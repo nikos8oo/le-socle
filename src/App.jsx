@@ -91,7 +91,7 @@ export default function App() {
       if (session.user.user_metadata?.join_code) supabase.auth.updateUser({ data: { join_code: null } })
     }
     const [{ data: bx }, { data: mem }, { data: adm }] = await Promise.all([
-      supabase.from('boxes').select('id, name, settings, join_code, stripe_account_id, stripe_charges_enabled, logo_url, tagline, address, postal_code, city, phone, email, website, instagram, siret, opening_hours, welcome_message, rules_url, is_demo').order('created_at'),
+      supabase.from('boxes').select('id, name, settings, join_code, stripe_account_id, stripe_charges_enabled, logo_url, tagline, address, postal_code, city, phone, email, website, instagram, siret, opening_hours, welcome_message, rules_url, is_demo, booking_module').order('created_at'),
       supabase.from('box_members').select('box_id, role, coach_id').eq('user_id', uid),
       supabase.from('platform_admins').select('user_id').eq('user_id', uid),
     ])
@@ -175,7 +175,8 @@ export default function App() {
   }
 
   const tabs = role === 'owner' ? OWNER_TABS : role === 'adherent' ? ATH_TABS : COACH_TABS
-  const settingsTabs = role === 'owner' ? OWNER_SETTINGS : []
+  // Sans module réservations, Le Socle se pose à côté du logiciel de la salle : pas de boutique ni de paiement en ligne
+  const settingsTabs = role === 'owner' ? OWNER_SETTINGS.filter((t) => box.booking_module || !['plans', 'payments'].includes(t[0])) : []
   const current = tabs.some((t) => t[0] === tab) || settingsTabs.some((t) => t[0] === tab) ? tab : tabs[0][0]
   const inSettings = settingsTabs.find((t) => t[0] === current)
   const me = data ? data.coaches.find((c) => c.id === box.myCoach) : null
@@ -224,7 +225,7 @@ export default function App() {
       <main>
         <div className="head">{box.logo_url && <img className="headlogo" src={box.logo_url} alt="" />}<h1 className="boxname">{box.name}</h1>{box.is_demo && <span className="pill warn">Mode démo</span>}{inSettings && <span className="crumb">⚙ Réglages · {inSettings[1]}</span>}</div>
         {error && <p className="notice">Erreur de chargement : {error} <button className="btn small ghost" onClick={reload}>Réessayer</button></p>}
-        {role === 'adherent' ? <Athlete box={box} tab={current} toast={toast} /> : !data ? <div className="loading">Chargement…</div> : (
+        {role === 'adherent' && !box.booking_module ? <div className="card"><h2>Réservations indisponibles</h2><p className="sub">{box.name} n'utilise pas la réservation en ligne dans Le Socle. Continue de réserver tes cours avec l'outil habituel de ta salle.</p></div> : role === 'adherent' ? <Athlete box={box} tab={current} toast={toast} /> : !data ? <div className="loading">Chargement…</div> : (
           <>
             {current === 'today' && <Today {...ctx} goTo={setTab} />}
             {current === 'planning' && <Planning {...ctx} />}

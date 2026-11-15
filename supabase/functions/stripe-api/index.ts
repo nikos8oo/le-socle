@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
         if (!plan || !plan.active || !plan.for_sale) throw new HttpError(400, 'Formule indisponible')
         if (!plan.price_cents) throw new HttpError(400, 'Cette formule n’a pas de prix')
         const box = await getBox(plan.box_id)
+        if (!box.booking_module) throw new HttpError(400, 'Cette salle n’utilise pas la réservation dans Le Socle')
         if (!box.stripe_account_id || !box.stripe_charges_enabled) throw new HttpError(400, 'Le paiement en ligne n’est pas encore activé dans cette salle')
         if ((await roleIn(box.id, user.id)) !== 'adherent') throw new HttpError(403, 'Réservé aux adhérents de la salle')
         const { data: member } = await admin.from('members').select('*').eq('box_id', box.id).eq('user_id', user.id).single()

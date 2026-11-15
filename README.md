@@ -65,3 +65,9 @@ Le schéma, les fonctions et les règles d'accès (RLS) sont dans `supabase/migr
 - Étape 2 (fait) : formules, boutique, paiement par carte avec prélèvement automatique.
 - Étape 3 : aide à la migration depuis Deciplus, abonnement Le Socle pour les salles.
 - Ensuite : suivi des nouveaux adhérents (60 jours), simulateur LTV, réunion d'équipe, document d'onboarding coach en PDF, rappels par e-mail, abonnement Stripe.
+
+## Module réservations (par salle)
+`boxes.booking_module` : inscription des adhérents par code salle, réservation, formules en boutique, paiement en ligne.
+- Désactivé par défaut pour toute nouvelle salle (Le Socle se pose à côté du logiciel de réservation de la salle).
+- Seul le super admin l'active ou le coupe (console : colonne « Module réservations » ou fiche « Gérer »). Une salle de démo l'a toujours.
+- Coupé : pas d'onglets Formules / Paiement en ligne côté owner, pas d'espace réservation côté adhérent. En base, inscription adhérent, réservation et achat sont refusés (triggers `require_booking_module`), sauf pour l'équipe de la salle. Rien n'est supprimé.

@@ -73,7 +73,7 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
 
   return (
     <div className="stack">
-      <div className="grid g2 top">
+      {box.booking_module && <div className="grid g2 top">
         <div className="card">
           <h2>Inscription des adhérents</h2>
           <p className="sub">L'adhérent crée son compte dans l'app puis tape ce code pour retrouver ta salle. Affiche-le à l'accueil, ou envoie directement le lien.</p>
@@ -113,7 +113,7 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
             <div className="row full end"><button className="btn small">Enregistrer</button></div>
           </form>
         </div>
-      </div>
+      </div>}
 
       <div className="card">
         <div className="spread">
@@ -124,23 +124,23 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
           </div>
         </div>
         <div className="scroll"><table>
-          <thead><tr><th>Adhérent</th><th>Formule</th><th>Inscrit le</th><th>Dernière venue</th><th>30 derniers jours</th><th>Statut</th><th></th></tr></thead>
+          <thead><tr><th>Adhérent</th>{box.booking_module && <th>Formule</th>}<th>Inscrit le</th><th>Dernière venue</th><th>30 derniers jours</th><th>Statut</th><th></th></tr></thead>
           <tbody>
             {list.map((m) => { const s = stats[m.id] || { present: 0, absent: 0, tard: 0 }, st = status(m); return (
               <tr key={m.id}>
                 <td><b>{m.name}</b><div className="sub">{m.email || ''}{m.phone ? ' · ' + m.phone : ''}</div></td>
-                <td>{(() => { const ss = subsOf(m.id).filter((u) => u.status === 'active' || u.status === 'attente_paiement'); return ss.length ? ss.map((u) => <div key={u.id}><b>{u.name}</b><div className="sub">{usageText(u)}</div></div>) : <span className="sub">Aucune</span> })()}</td>
+                {box.booking_module && <td>{(() => { const ss = subsOf(m.id).filter((u) => u.status === 'active' || u.status === 'attente_paiement'); return ss.length ? ss.map((u) => <div key={u.id}><b>{u.name}</b><div className="sub">{usageText(u)}</div></div>) : <span className="sub">Aucune</span> })()}</td>}
                 <td>{fmt(m.joined)}</td>
                 <td>{fmt(m.last_visit)}</td>
                 <td>{s.present} venue{s.present > 1 ? 's' : ''}{s.absent ? <span className="sub"> · {s.absent} absences</span> : null}{s.tard ? <span className="sub"> · {s.tard} annul. tardives</span> : null}</td>
                 <td><Pill cls={st[0]}>{st[1]}</Pill></td>
-                <td><div className="row"><button className="btn small" onClick={() => setSubsFor(m)}>Formules</button><button className="btn small ghost" onClick={() => toggle(m)}>{m.active ? 'Suspendre' : 'Réactiver'}</button></div></td>
+                <td><div className="row">{box.booking_module && <button className="btn small" onClick={() => setSubsFor(m)}>Formules</button>}<button className="btn small ghost" onClick={() => toggle(m)}>{m.active ? 'Suspendre' : 'Réactiver'}</button></div></td>
               </tr>
             ) })}
           </tbody>
         </table></div>
         {subsFor && <MemberSubs m={subsFor} subs={subsOf(subsFor.id)} plans={data.plans.filter((p) => p.active)} toast={toast} log={log} onClose={() => setSubsFor(null)} onChange={reloadUsage} />}
-        {!list.length && <Empty>{data.members.length ? 'Aucun adhérent ne correspond.' : 'Aucun adhérent pour l’instant : partage le lien d’inscription.'}</Empty>}
+        {!list.length && <Empty>{data.members.length ? 'Aucun adhérent ne correspond.' : (box.booking_module ? 'Aucun adhérent pour l’instant : partage le lien d’inscription.' : 'Aucun adhérent pour l’instant.')}</Empty>}
       </div>
     </div>
   )
