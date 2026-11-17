@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import LearnLink from '../components/LearnLink'
 import { supabase } from '../lib/supabase'
 import { money, monthly } from '../lib/plans'
 import { useUsage } from './Plans'
@@ -229,7 +230,7 @@ export default function Finance({ box, data, toast }) {
     <div className="stack">
       <div className="card">
         <div className="spread">
-          <div><h2>Rentabilité de la salle</h2><p className="sub">Ton compte de résultat présenté comme celui de ton expert-comptable : montants {f.vat_registered ? 'hors taxes' : 'TTC (TVA non récupérable)'}, soldes intermédiaires de gestion, point mort. Visible par toi seul.</p></div>
+          <div><h2>Rentabilité de la salle</h2><p className="sub">Ton compte de résultat présenté comme celui de ton expert-comptable : montants {f.vat_registered ? 'hors taxes' : 'TTC (TVA non récupérable)'}, soldes intermédiaires de gestion, point mort. Visible par toi seul.</p><LearnLink k="finance" /></div>
           <div className="row">
             <div className="seg">{[['mois', 'Par mois'], ['annee', 'Sur un an']].map(([key, l]) => <button key={key} className="rper" aria-pressed={per === key} onClick={() => setPer(key)}>{l}</button>)}</div>
             <button className="btn ghost" onClick={exportCsv}>Exporter pour le comptable</button>

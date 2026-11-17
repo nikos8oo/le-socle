@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import LearnLink from '../components/LearnLink'
 import { supabase } from '../lib/supabase'
 import { addDays, diffDays, fmt, today } from '../lib/dates'
 import { Empty, Modal, Pill } from '../components/ui'
@@ -117,7 +118,7 @@ export default function Members({ box, data, reload, toast, log, onBoxChange }) 
 
       <div className="card">
         <div className="spread">
-          <div><h2>Adhérents</h2><p className="sub">{data.members.length} inscrits · {news} nouveaux (moins de 60 jours) · {atRisk} à relancer</p></div>
+          <div><h2>Adhérents</h2><p className="sub">{data.members.length} inscrits · {news} nouveaux (moins de 60 jours) · {atRisk} à relancer</p><LearnLink k="members" /></div>
           <div className="row">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher" aria-label="Rechercher un adhérent" />
             <div className="seg">{[['tous', 'Tous'], ['nouveaux', 'Nouveaux'], ['risque', 'À relancer']].map(([k, l]) => <button key={k} className="rper" aria-pressed={filter === k} onClick={() => setFilter(k)}>{l}</button>)}</div>

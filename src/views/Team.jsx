@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import LearnLink from '../components/LearnLink'
 import { supabase } from '../lib/supabase'
 import { diffDays, fmt, num, today } from '../lib/dates'
 import { CRITS, LVL } from '../lib/method'
@@ -57,7 +58,7 @@ export default function Team({ box, data, reload, toast, log, session, isAdmin }
   return (
     <div className="stack">
       <div className="card">
-        <div className="spread"><div><h2>L'équipe</h2><p className="sub">Une fiche par coach. Observation d'un cours complet au moins une fois par trimestre, avec la grille des 7 critères.</p></div>
+        <div className="spread"><div><h2>L'équipe</h2><p className="sub">Une fiche par coach. Observation d'un cours complet au moins une fois par trimestre, avec la grille des 7 critères.</p><LearnLink k="team" /></div>
           <button className="btn" onClick={() => setEdit({ name: '', role_label: 'Coach' })}>Ajouter un coach</button></div>
         <div className="grid g3">
           {data.coaches.map((c) => { const o = lastObs(c.id), a = o && avg(o), late = !o || diffDays(t, o.day) > 92; return (

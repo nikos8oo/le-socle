@@ -17,6 +17,7 @@ import AdminConsole from './views/AdminConsole'
 import Payments from './views/Payments'
 import BoxInfo from './views/BoxInfo'
 import Finance from './views/Finance'
+import { ACADEMY_URL } from './lib/academy'
 
 // Onglets du quotidien dans la barre ; la gestion de la salle dans la roue des réglages
 const OWNER_TABS = [['today', "Aujourd'hui"], ['planning', 'Planning'], ['members', 'Adhérents'], ['trials', "Séances d'essai"], ['events', 'Événements']]
@@ -46,10 +47,13 @@ export default function App() {
     const join = p.get('rejoindre')
     if (inv) { localStorage.setItem('socle-invite', inv); localStorage.setItem('socle-space', 'salle'); setSpaceRaw('salle') }
     if (join) { localStorage.setItem('socle-join', join); localStorage.setItem('socle-space', 'athlete'); setSpaceRaw('athlete') }
+    // lien direct vers un module, par exemple depuis une leçon de la formation : ?module=planning
+    const mod = p.get('module')
+    if (mod) setTab(mod)
     const st = p.get('stripe'), pay = p.get('paiement')
     if (st) { setTab('payments'); setTimeout(() => toast(st === 'retour' ? 'Retour de Stripe : vérification de ton compte…' : 'Lien expiré : clique à nouveau sur « Activer le paiement en ligne »'), 600) }
     if (pay) { setTab(pay === 'ok' ? 'mine' : 'shop'); setTimeout(() => toast(pay === 'ok' ? 'Paiement réussi ! Ta formule s’active dans quelques secondes.' : 'Paiement annulé : rien n’a été débité.'), 600) }
-    if (inv || join || st || pay) window.history.replaceState(null, '', window.location.pathname)
+    if (inv || join || mod || st || pay) window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
   useEffect(() => {
@@ -215,6 +219,7 @@ export default function App() {
                   <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>{space === 'athlete' ? 'Rejoindre ou changer de salle' : 'Changer de salle'}</button>
                   {isAdmin && space === 'salle' && <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>← Console admin</button>}
                   {hasOther && <button onClick={switchSpace}>{otherSpace === 'athlete' ? 'Passer à mon espace athlète' : 'Passer à l’espace salle'}</button>}
+                  {role !== 'adherent' && <a className="menulink" href={ACADEMY_URL} target="_blank" rel="noreferrer">🎓 Formation Drill's &amp; Skills ↗</a>}
                   <button onClick={() => { localStorage.removeItem('socle-box'); supabase.auth.signOut() }}>Se déconnecter</button>
                 </div>
               )}

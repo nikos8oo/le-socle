@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import LearnLink from '../components/LearnLink'
 import { supabase } from '../lib/supabase'
 import { JOURS, addDays, diffDays, fmt, hhmm, num, today, wdOf } from '../lib/dates'
 import { DEFAULT_TYPES, PALETTE } from '../lib/method'
@@ -64,7 +65,7 @@ export default function Planning({ box, role, data, reload, toast, log }) {
     <div className="stack">
       <div className="card">
         <div className="spread">
-          <div><h2>Planning &amp; remplissage</h2><p className="sub">Le planning une fois, la fréquentation chaque jour (page Aujourd'hui), et après 3 mois une lecture claire de chaque créneau.</p></div>
+          <div><h2>Planning &amp; remplissage</h2><p className="sub">Le planning une fois, la fréquentation chaque jour (page Aujourd'hui), et après 3 mois une lecture claire de chaque créneau.</p>{role === 'owner' && <LearnLink k="planning" />}</div>
           {role === 'owner' && <div className="seg">{[['grille', '1. Mon planning'], ['lecture', '2. Lecture du remplissage']].map(([k, l]) => <button key={k} className="rper" aria-pressed={mode === k} onClick={() => setMode(k)}>{l}</button>)}</div>}
         </div>
 

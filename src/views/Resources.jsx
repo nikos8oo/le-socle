@@ -1,8 +1,9 @@
+import { ACADEMY_URL } from '../lib/academy'
 const DOCS = [
   { f: '/note-book-coach-2-0.pdf', n: 'Note Book Coach 2.0', d: 'Préparer un cours : objectifs, timing, points techniques, échauffement, retour au calme.', who: 'all' },
 ]
 const LIENS = [
-  { u: 'https://drill-skill.odoo.com/slides', n: 'Formation en ligne Drill\'s & Skills', d: 'Les modules de la méthode, à suivre à son rythme.' },
+  { u: ACADEMY_URL, n: 'Drill\'s & Skills Academy', d: 'La formation en ligne : leçons, quiz et mises en pratique terrain. Connexion avec le code d’accès de ta salle.' },
 ]
 
 export default function Resources({ role }) {

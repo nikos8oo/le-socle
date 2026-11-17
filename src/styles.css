@@ -384,3 +384,8 @@ input[type=tel],input[type=url],input[type=search]{background:var(--bg);border:1
 .fintable tr.sig td{font-weight:700;background:var(--bg);padding-left:8px;padding-right:8px}
 .fintable tr.sig td:first-child{border-radius:8px 0 0 8px}.fintable tr.sig td:last-child{border-radius:0 8px 8px 0}
 .fintable tr.total td{padding-left:8px;padding-right:8px}
+.learnlink{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;text-decoration:none;max-width:100%}
+.learnlink b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.learnlink:hover{filter:brightness(.97);text-decoration:underline}
+.menupanel a.menulink{cursor:pointer;padding:8px;border-radius:8px;font-size:14px;color:var(--ink);text-decoration:none}
+.menupanel a.menulink:hover{background:var(--accent-soft)}

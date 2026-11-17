@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import LearnLink from '../components/LearnLink'
 import { supabase } from '../lib/supabase'
 import { addDays, fmt, num, today } from '../lib/dates'
 import { whoName } from '../lib/method'
@@ -55,7 +56,7 @@ export default function Trials({ box, role, data, reload, toast, log, myCoach })
   return (
     <div className="stack">
       <div className="card">
-        <div><h2>{role === 'owner' ? "Séances d'essai & transformation" : 'Mes séances d\'essai'}</h2><p className="sub">Note chaque essai et le coach qui l'a encadré. Le taux de transformation se calcule tout seul. Cible : 80 %, soit 8 essais sur 10.</p></div>
+        <div><h2>{role === 'owner' ? "Séances d'essai & transformation" : 'Mes séances d\'essai'}</h2><p className="sub">Note chaque essai et le coach qui l'a encadré. Le taux de transformation se calcule tout seul. Cible : 80 %, soit 8 essais sur 10.</p>{role === 'owner' && <LearnLink k="trials" />}</div>
         <form className="form" onSubmit={add}>
           <label>Date<input type="date" value={f.day} max={t} onChange={(e) => setF({ ...f, day: e.target.value })} required /></label>
           <label>Prénom du prospect<input value={f.prospect} onChange={(e) => setF({ ...f, prospect: e.target.value })} placeholder="Ex. : Julien" /></label>
