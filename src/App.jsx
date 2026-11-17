@@ -134,7 +134,7 @@ export default function App() {
     return (
       <div className="authwrap">
         <div className="authcard">
-          <div className="brand dark"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
+          <div className="brand dark"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Box</small></span></div>
           <h1>Lien d'inscription adhérent</h1>
           <p>Tu as ouvert le lien d'inscription de <b>{joinClash.name}</b>, mais tu es connecté avec ton compte <b>{joinClash.role === 'owner' ? 'owner' : 'coach'}</b> de cette salle.</p>
           <p className="sub">Ce lien sert à tes adhérents. Pour voir l'app comme eux, crée un compte adhérent avec une autre adresse e-mail (idéalement dans une fenêtre de navigation privée).</p>
@@ -150,7 +150,7 @@ export default function App() {
       <>
         <header className="topbar">
           <div className="tb">
-            <div className="brand"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
+            <div className="brand"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Box</small></span></div>
             <nav className="tabs" aria-label="Navigation"><button className="on" aria-current="page">Console admin</button></nav>
             <div className="tb-right">
               <button className="iconbtn" title={effDark0 ? 'Version claire' : 'Version sombre'} onClick={() => { const t = effDark0 ? 'light' : 'dark'; setTheme(t); localStorage.setItem('socle-theme', t) }}>{effDark0 ? '☀' : '☾'}</button>
@@ -179,7 +179,7 @@ export default function App() {
   }
 
   const tabs = role === 'owner' ? OWNER_TABS : role === 'adherent' ? ATH_TABS : COACH_TABS
-  // Sans module réservations, Le Socle se pose à côté du logiciel de la salle : pas de boutique ni de paiement en ligne
+  // Sans module réservations, DS Box se pose à côté du logiciel de la salle : pas de boutique ni de paiement en ligne
   const settingsTabs = role === 'owner' ? OWNER_SETTINGS.filter((t) => box.booking_module || !['plans', 'payments'].includes(t[0])) : []
   const current = tabs.some((t) => t[0] === tab) || settingsTabs.some((t) => t[0] === tab) ? tab : tabs[0][0]
   const inSettings = settingsTabs.find((t) => t[0] === current)
@@ -191,7 +191,7 @@ export default function App() {
     <>
       <header className="topbar">
         <div className="tb">
-          <div className="brand"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
+          <div className="brand"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Box</small></span></div>
           <nav className="tabs" aria-label="Navigation">
             {tabs.map(([k, l]) => <button key={k} aria-current={current === k ? 'page' : undefined} className={current === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}
           </nav>
@@ -219,7 +219,7 @@ export default function App() {
                   <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>{space === 'athlete' ? 'Rejoindre ou changer de salle' : 'Changer de salle'}</button>
                   {isAdmin && space === 'salle' && <button onClick={() => { setBoxId(null); localStorage.removeItem('socle-box'); setMenu(false) }}>← Console admin</button>}
                   {hasOther && <button onClick={switchSpace}>{otherSpace === 'athlete' ? 'Passer à mon espace athlète' : 'Passer à l’espace salle'}</button>}
-                  {role !== 'adherent' && <a className="menulink" href={ACADEMY_URL} target="_blank" rel="noreferrer">🎓 Formation Drill's &amp; Skills ↗</a>}
+                  {role !== 'adherent' && <a className="menulink" href={ACADEMY_URL} target="_blank" rel="noreferrer">🎓 DS Academy, la formation ↗</a>}
                   <button onClick={() => { localStorage.removeItem('socle-box'); supabase.auth.signOut() }}>Se déconnecter</button>
                 </div>
               )}
@@ -230,7 +230,7 @@ export default function App() {
       <main>
         <div className="head">{box.logo_url && <img className="headlogo" src={box.logo_url} alt="" />}<h1 className="boxname">{box.name}</h1>{box.is_demo && <span className="pill warn">Mode démo</span>}{inSettings && <span className="crumb">⚙ Réglages · {inSettings[1]}</span>}</div>
         {error && <p className="notice">Erreur de chargement : {error} <button className="btn small ghost" onClick={reload}>Réessayer</button></p>}
-        {role === 'adherent' && !box.booking_module ? <div className="card"><h2>Réservations indisponibles</h2><p className="sub">{box.name} n'utilise pas la réservation en ligne dans Le Socle. Continue de réserver tes cours avec l'outil habituel de ta salle.</p></div> : role === 'adherent' ? <Athlete box={box} tab={current} toast={toast} /> : !data ? <div className="loading">Chargement…</div> : (
+        {role === 'adherent' && !box.booking_module ? <div className="card"><h2>Réservations indisponibles</h2><p className="sub">{box.name} n'utilise pas la réservation en ligne dans DS Box. Continue de réserver tes cours avec l'outil habituel de ta salle.</p></div> : role === 'adherent' ? <Athlete box={box} tab={current} toast={toast} /> : !data ? <div className="loading">Chargement…</div> : (
           <>
             {current === 'today' && <Today {...ctx} goTo={setTab} />}
             {current === 'planning' && <Planning {...ctx} />}

@@ -5,8 +5,8 @@ export default function LearnLink({ k }) {
   const l = LEARN[k]
   if (!l) return null
   return (
-    <a className="learnlink" href={l.url} target="_blank" rel="noreferrer" title="Ouvrir la leçon dans la formation Drill's & Skills">
-      <span aria-hidden="true">🎓</span> Apprends-le dans la formation : <b>{l.label}</b> ↗
+    <a className="learnlink" href={l.url} target="_blank" rel="noreferrer" title="Ouvrir la leçon dans Drill's & Skills Academy">
+      <span aria-hidden="true">🎓</span> Apprends-le dans DS Academy : <b>{l.label}</b> ↗
     </a>
   )
 }

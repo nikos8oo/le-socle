@@ -101,7 +101,7 @@ export default function Finance({ box, data, toast }) {
     const add = (k, v) => { acc[k] = (acc[k] || 0) + v }
     let vatCollected = 0, vatDeductible = 0, stripe = 0
 
-    // Produits : abonnements suivis dans Le Socle (module réservations) + lignes saisies
+    // Produits : abonnements suivis dans DS Box (module réservations) + lignes saisies
     const active = auto ? usage.filter((u) => u.status === 'active') : []
     let subsTTC = 0
     if (auto) {
@@ -188,7 +188,7 @@ export default function Finance({ box, data, toast }) {
     line('607', 'Achats de marchandises', c.achats, -1)
     sub('Marge commerciale', c.margeCo)
   }
-  line('706', 'Prestations de services' + (auto && c.subsHT ? ' (dont ' + M(c.subsHT) + ' d’abonnements suivis dans Le Socle)' : ''), c.g('706'))
+  line('706', 'Prestations de services' + (auto && c.subsHT ? ' (dont ' + M(c.subsHT) + ' d’abonnements suivis dans DS Box)' : ''), c.g('706'))
   line('708', 'Produits des activités annexes', c.g('708'))
   sub("Chiffre d'affaires", c.ca)
   c.extKeys.forEach((key) => line(key, CHARGE_ACCOUNTS[key][0], c.g(key), -1))
@@ -312,7 +312,7 @@ export default function Finance({ box, data, toast }) {
         </div>
 
         {edit === 'revenues' && <>
-          {auto && <p className="notice">Les abonnements et carnets vendus dans Le Socle sont comptés automatiquement en 706 ({money(c.subsHT)} HT / mois). Ajoute ici tes autres recettes.</p>}
+          {auto && <p className="notice">Les abonnements et carnets vendus dans DS Box sont comptés automatiquement en 706 ({money(c.subsHT)} HT / mois). Ajoute ici tes autres recettes.</p>}
           {!auto && <p className="sub">Reporte ici ton chiffre d'affaires (par exemple le total mensuel de tes abonnements depuis ton logiciel de réservation), puis tes autres recettes.</p>}
           <LineTable kind="revenues" accounts={REVENUE_ACCOUNTS} presets={REVENUE_PRESETS} lines={c.rev} f={f} set={set} patch={patch} drop={drop} M={M}
             empty="Aucune recette saisie." />
@@ -392,7 +392,7 @@ export default function Finance({ box, data, toast }) {
 
         {edit === 'hyp' && <div className="form">
           <label className="full inline"><input type="checkbox" checked={!!f.vat_registered} onChange={(e) => set('vat_registered', e.target.checked)} /> La salle facture la TVA (pas en franchise en base)</label>
-          {f.vat_registered && <label>TVA sur les abonnements suivis dans Le Socle (%)<input type="number" step="0.1" min="0" max="30" value={f.vat_rate} onChange={(e) => set('vat_rate', e.target.value)} /></label>}
+          {f.vat_registered && <label>TVA sur les abonnements suivis dans DS Box (%)<input type="number" step="0.1" min="0" max="30" value={f.vat_rate} onChange={(e) => set('vat_rate', e.target.value)} /></label>}
           <label>Imposition des bénéfices<select value={f.tax_regime} onChange={(e) => set('tax_regime', e.target.value)}>
             <option value="is">Société à l'impôt sur les sociétés (SAS, SARL…)</option><option value="ir">Entreprise individuelle ou société à l'IR</option></select></label>
           {f.tax_regime === 'is' && <label className="full inline"><input type="checkbox" checked={f.is_reduced !== false} onChange={(e) => set('is_reduced', e.target.checked)} /> Taux réduit PME : 15 % jusqu'à 42 500 € de bénéfice, 25 % au-delà</label>}

@@ -51,7 +51,7 @@ export default function AdminConsole({ toast, onOpen }) {
     const on = !r.booking_module
     const msg = on
       ? 'Activer le module réservations pour ' + r.name + ' ? Ses adhérents pourront s’inscrire avec le code salle, réserver leurs cours et acheter leurs formules (paiement en ligne si l’owner connecte Stripe).'
-      : 'Couper le module réservations pour ' + r.name + ' ? Les adhérents ne pourront plus réserver ni acheter dans Le Socle, et l’owner ne verra plus Formules et Paiement en ligne. Rien n’est supprimé : tu pourras le réactiver.'
+      : 'Couper le module réservations pour ' + r.name + ' ? Les adhérents ne pourront plus réserver ni acheter dans DS Box, et l’owner ne verra plus Formules et Paiement en ligne. Rien n’est supprimé : tu pourras le réactiver.'
     if (!window.confirm(msg)) return
     const { error } = await supabase.from('boxes').update({ booking_module: on }).eq('id', r.id)
     if (error) return toast(error.message)
@@ -222,7 +222,7 @@ function ManageBox({ box, toast, onClose, onChange, onOpen, onToggleModule }) {
         </form>
 
         <div className="prow">
-          <div style={{ flex: 1 }}><b>Module réservations</b> <Pill cls={box.booking_module ? 'good' : 'neutral'}>{box.booking_module ? 'Activé' : 'Coupé'}</Pill><div className="sub">{box.booking_module ? 'Inscription des adhérents par code salle, réservation des cours, formules en boutique et paiement en ligne.' : 'Le Socle se pose à côté du logiciel de la salle : pilotage, équipe, essais, rentabilité. Pas de réservation ni de boutique adhérent.'}</div></div>
+          <div style={{ flex: 1 }}><b>Module réservations</b> <Pill cls={box.booking_module ? 'good' : 'neutral'}>{box.booking_module ? 'Activé' : 'Coupé'}</Pill><div className="sub">{box.booking_module ? 'Inscription des adhérents par code salle, réservation des cours, formules en boutique et paiement en ligne.' : 'DS Box se pose à côté du logiciel de la salle : pilotage, équipe, essais, rentabilité. Pas de réservation ni de boutique adhérent.'}</div></div>
           <button className={'btn small' + (box.booking_module ? ' ghost' : '')} onClick={onToggleModule}>{box.booking_module ? 'Couper' : 'Activer'}</button>
         </div>
 
