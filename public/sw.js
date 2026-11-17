@@ -1,6 +1,6 @@
 // Service worker minimal : rend l'app installable et garde la coquille en cache.
 // Les données passent toujours par le réseau (Supabase).
-const CACHE = 'le-socle-v1'
+const CACHE = 'le-socle-v2'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg']
 
 self.addEventListener('install', (e) => {

@@ -56,7 +56,7 @@ export default function Auth({ recovery, onRecovered, space, setSpace }) {
     return (
       <div className="authwrap">
         <div className="authcard">
-          <div className="brand dark"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
+          <div className="brand dark"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
           <h1>Bienvenue</h1>
           <p className="sub">Choisis ton espace.</p>
           <div className="spacepick">
@@ -76,7 +76,7 @@ export default function Auth({ recovery, onRecovered, space, setSpace }) {
   return (
     <div className="authwrap">
       <div className="authcard">
-        <div className="brand dark"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
+        <div className="brand dark"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
         {!recovery && <div className="seg spaceseg">
           <button className="rper" aria-pressed={!pro} onClick={() => { setSpace('athlete'); setErr(''); setInfo('') }}>Athlète</button>
           <button className="rper" aria-pressed={pro} onClick={() => { setSpace('salle'); setErr(''); setInfo(''); if (mode === 'signup' && !invited) setMode('login') }}>Espace salle</button>

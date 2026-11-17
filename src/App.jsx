@@ -134,7 +134,7 @@ export default function App() {
     return (
       <div className="authwrap">
         <div className="authcard">
-          <div className="brand dark"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
+          <div className="brand dark"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
           <h1>Lien d'inscription adhérent</h1>
           <p>Tu as ouvert le lien d'inscription de <b>{joinClash.name}</b>, mais tu es connecté avec ton compte <b>{joinClash.role === 'owner' ? 'owner' : 'coach'}</b> de cette salle.</p>
           <p className="sub">Ce lien sert à tes adhérents. Pour voir l'app comme eux, crée un compte adhérent avec une autre adresse e-mail (idéalement dans une fenêtre de navigation privée).</p>
@@ -150,7 +150,7 @@ export default function App() {
       <>
         <header className="topbar">
           <div className="tb">
-            <div className="brand"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
+            <div className="brand"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
             <nav className="tabs" aria-label="Navigation"><button className="on" aria-current="page">Console admin</button></nav>
             <div className="tb-right">
               <button className="iconbtn" title={effDark0 ? 'Version claire' : 'Version sombre'} onClick={() => { const t = effDark0 ? 'light' : 'dark'; setTheme(t); localStorage.setItem('socle-theme', t) }}>{effDark0 ? '☀' : '☾'}</button>
@@ -191,7 +191,7 @@ export default function App() {
     <>
       <header className="topbar">
         <div className="tb">
-          <div className="brand"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
+          <div className="brand"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
           <nav className="tabs" aria-label="Navigation">
             {tabs.map(([k, l]) => <button key={k} aria-current={current === k ? 'page' : undefined} className={current === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}
           </nav>

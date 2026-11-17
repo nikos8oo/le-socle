@@ -41,7 +41,7 @@ export default function BoxPicker({ boxes, space, onPick, onCreated, onSignOut, 
   return (
     <div className="authwrap">
       <div className="authcard" style={{ maxWidth: 520 }}>
-        <div className="brand dark"><small>Drill's &amp; Skills</small><b>Le Socle</b></div>
+        <div className="brand dark"><span className="logo">DS</span><span className="name"><b>Drill's &amp; Skills</b><small>Le Socle</small></span></div>
 
         {boxes.length > 0 && <>
           <h1>{athlete ? 'Mes salles' : 'Mes salles accompagnées'}</h1>
